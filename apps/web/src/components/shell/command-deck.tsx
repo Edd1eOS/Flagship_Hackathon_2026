@@ -10,6 +10,7 @@ export type SelectedLocationContext = {
   blurb: string;
   state: LocationState;
   reason: string | null;
+  lockedHint: string | null;
 };
 
 export type ResidentRow = {
@@ -82,7 +83,13 @@ export function CommandDeck({
         </p>
         <dl className="rounded-lg border border-[var(--color-line)] p-3 text-sm">
           <dt className="font-semibold text-[var(--color-ink)]/60">State</dt>
-          <dd className={selectedLocation.reason ? "mb-2" : ""}>
+          <dd
+            className={
+              selectedLocation.reason || selectedLocation.lockedHint
+                ? "mb-2"
+                : ""
+            }
+          >
             {LOCATION_STATE_LABEL[selectedLocation.state]}
           </dd>
           {selectedLocation.reason ? (
@@ -91,6 +98,14 @@ export function CommandDeck({
                 Why it&apos;s open
               </dt>
               <dd>{selectedLocation.reason}</dd>
+            </>
+          ) : null}
+          {selectedLocation.lockedHint ? (
+            <>
+              <dt className="font-semibold text-[var(--color-ink)]/60">
+                How to unlock
+              </dt>
+              <dd>{selectedLocation.lockedHint}</dd>
             </>
           ) : null}
         </dl>
