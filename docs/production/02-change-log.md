@@ -1299,6 +1299,41 @@ corepack pnpm test:e2e         -> PASS (19/19 Chromium, up from 18)
 - **Open:** the user reports the extension does not work at all for them (both Chrome and Edge, correct unpacked folder selected), independent of the icon issue. Not reproduced in this sandbox (background service worker starts, content scripts inject, e2e suite passes against a freshly built unpacked load). Needs the user's exact symptom/screenshot to diagnose further - explicitly deprioritized by the user ("that one fix last") in favor of the fixes above.
 - The XP badge is read-only/derived; there is still no transient "+10 XP" feedback moment when a reflection is created, only the persistent total. Flagged as a possible follow-up, not requested.
 
+### CHG-20260712-028 - Replace the onboarding banner with a real first-run tutorial
+
+- Timestamp: 2026-07-12 01:55 CST
+- Author/agent: Claude implementation agent
+- Stage: n/a (usability follow-up)
+- Change type: fix
+- Status: completed
+- Request/source: user rejected the one-line banner from CHG-20260711-021 as insufficient - "there isn't even a simple tutorial, even the developer doesn't know what to do when you first arrive."
+
+#### Changed
+
+- Replaced `onboarding-hint.tsx` (a dismissible top banner) with `onboarding-modal.tsx`: a centered, blocking `role="dialog"` shown on first visit with a one-sentence product explanation and a numbered "Try this first" list (review the waiting decision, use "I'm tempted", tap a building, use the side/bottom nav) written against the app's actual button labels, not generic copy.
+- Added a persistent "?" (`HelpCircle`) button to `TopBar` (`onShowHelp`) so the tutorial is a standing reference the user (or a judge) can reopen at any time, not a one-shot toast that vanishes forever - directly addresses "even the developer doesn't know what to do," since now there's always a way back to the answer inside the product itself.
+- Dismissal still persists via the same `localStorage` key as before; reopening via "?" does not touch that key, so a fresh visit after dismissal still starts closed while "?" remains available on demand.
+- `tests/e2e/town-dashboard.spec.ts`: the file-wide `beforeEach` now seeds `lemonade.onboarding-dismissed=true` via `page.addInitScript` before every test, so the modal doesn't block the ~18 other tests that don't care about it. The dedicated onboarding test overrides this with its own init script and - having learned from CHG-20260712-026's spacing bug - verifies dismissal persistence via a direct `localStorage.getItem` read instead of an actual `page.reload()`, since a real reload would re-run both init scripts (this test's override included) and mask the true persisted value.
+- Hit the same JSX-text-adjacent-to-`<strong>`-across-a-line-wrap spacing bug as CHG-20260712-026 on one list item ("I'm tempted" merging into the following word); this time isolated it precisely by comparing a working `<li>` (explicit `{" "}` before the tag, single-line text after it) against the broken one (multi-line text starting immediately after the closing tag), and fixed it by dropping the `<strong>` for that one item rather than fighting Prettier, which kept collapsing manually-inserted `{" "}` markers back into the exact adjacency that triggers the bug.
+
+#### Verification
+
+```text
+corepack pnpm typecheck        -> PASS (4 packages)
+corepack pnpm lint             -> PASS
+corepack pnpm test              -> PASS (141/141)
+corepack pnpm format:check     -> PASS
+corepack pnpm --filter @lemonade/web build -> PASS
+corepack pnpm test:e2e         -> PASS (19/19 Chromium; one run hit an environmental `net::ERR_NO_BUFFER_SPACE` flake from heavy local Playwright/browser usage this session, reran clean)
+```
+
+- Verified all four "Try this first" list items render with correct inter-word spacing via `innerText()`, not just a screenshot (this exact class of bug is invisible in a cursory visual check at low zoom).
+- Manually screenshotted the modal on a genuinely fresh profile (`lemonade.onboarding-dismissed` absent) to confirm layout/legibility over the town art.
+
+#### Risks and follow-up
+
+- Still open: the user's report that the extension is fully non-functional for them locally (Chrome and Edge), independent of everything fixed today. Awaiting their screenshot/exact symptom.
+
 ## Release/Submission Entries
 
 When a deployment or submission artifact is created, add entries for:

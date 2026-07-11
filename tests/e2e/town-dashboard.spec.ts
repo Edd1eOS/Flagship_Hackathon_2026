@@ -10,6 +10,12 @@ test.beforeEach(async ({ page }) => {
     if (message.type() === "error") consoleErrors.push(message.text());
   });
   page.on("pageerror", (error) => consoleErrors.push(String(error)));
+  // Every test except the onboarding one itself starts with the welcome
+  // modal already dismissed, so it doesn't block interaction with the rest
+  // of the dashboard.
+  await page.addInitScript(() => {
+    window.localStorage.setItem("lemonade.onboarding-dismissed", "true");
+  });
 });
 
 test.afterEach(() => {
@@ -500,17 +506,33 @@ test("Goal tab shows real progress beside the town, not a placeholder", async ({
   await expect(page.getByRole("button", { name: /Home Nook/ })).toBeVisible();
 });
 
-test("Onboarding hint dismisses and stays dismissed after reload", async ({
+test("Welcome modal shows on first visit, dismisses, persists, and reopens from Help", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
+  // Override the file-wide "already dismissed" init script for this test
+  // only, so the modal actually appears as it would for a first-time visit.
+  await page.addInitScript(() => {
+    window.localStorage.removeItem("lemonade.onboarding-dismissed");
+  });
   await page.goto("/");
-  const hint = page.getByRole("note");
-  await expect(hint.getByText(/New here\?/)).toBeVisible();
-  await hint.getByRole("button", { name: "Got it" }).click();
-  await expect(hint).toBeHidden();
-  await page.reload();
-  await expect(page.getByRole("note")).toBeHidden();
+
+  const modal = page.getByRole("dialog", { name: "Welcome to Lemonade Lane" });
+  await expect(modal).toBeVisible();
+  await expect(modal.getByText("Try this first")).toBeVisible();
+  await modal.getByRole("button", { name: "Got it, let's explore" }).click();
+  await expect(modal).toBeHidden();
+
+  // Dismissal persists via localStorage (checked directly rather than via a
+  // real reload, since this test's own init-script override above would
+  // otherwise re-clear the flag on every navigation, masking the real value).
+  const dismissedFlag = await page.evaluate(() =>
+    window.localStorage.getItem("lemonade.onboarding-dismissed"),
+  );
+  expect(dismissedFlag).toBe("true");
+
+  await page.getByRole("button", { name: "How this works" }).click();
+  await expect(modal).toBeVisible();
 });
 
 test("Level badge reflects reflection XP after a decision review", async ({
