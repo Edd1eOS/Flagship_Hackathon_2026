@@ -1099,6 +1099,29 @@ corepack pnpm test:e2e         -> PASS (16/16 Chromium, up from 14)
 - Lossless PNG re-optimisation was measured (0.0-2.3% savings across the 7 art files, ~6.9 MB total) and judged not worth the risk of touching approved Stage 13 art this close to the deadline; no lossy/palette recompression was attempted since that would alter approved visual content without a new sign-off.
 - Stage 15 (deployment, repository, video, submission) is still not started.
 
+### CHG-20260711-022 - Stage 15 slice 1: README, secret check, extension ZIP
+
+- Timestamp: 2026-07-11 23:55 CST
+- Author/agent: Claude implementation agent
+- Stage: 15 (deployment, repository, video, submission)
+- Change type: docs + build
+- Status: partially completed - only the parts of Stage 15 that need no external account/credentials or video recording; user explicitly deferred Vercel deployment and video recording to decide later.
+- Request/source: user chose "do the safe parts first" when asked how to proceed with Stage 15's higher-risk tasks (Vercel deploy, video recording).
+
+#### Changed
+
+- `README.md`: replaced the Stage-2-era placeholder stub with the full roadmap-required content - problem, value proposition, demo flow (the roadmap's Final Demo Order), architecture table, local setup commands, extension-loading steps, a seed/demo-data disclaimer, a privacy-limits section, source references into `docs/production/`, and the Lemonade Inc. non-affiliation note required by `docs/00-decision-log.md`'s known-brand-risk entry. "Team & roles" is left as an explicit placeholder for the user - no team roster exists anywhere in the repo's docs, and inventing names would misrepresent the submission.
+- Confirmed `.env.example` contains no secrets (one commented-out optional P1 key) and `.gitignore` excludes all `.env*` variants except the `.example` files - no change needed.
+- Built the extension submission artifact: `corepack pnpm --filter @lemonade/extension zip` produced `apps/extension/.output/lemonadeextension-0.0.0-chrome.zip` (1.48 MB); `.output/` is gitignored by design, so the zip itself is a local build artifact, not a committed file - the README documents the exact command to reproduce it and the unpacked-load steps for judges who prefer that.
+
+#### Verification
+
+- `git status --short` after the zip build: only `README.md` changed; the build output correctly stayed untracked.
+
+#### Risks and follow-up
+
+- Stage 15 tasks 3 (Vercel deploy), 6-7 (screen captures/demo video), 9 (second-device/clean-profile playback check), 10 (submission checklist), and 11 (code freeze) are still open and need the user's explicit go-ahead - deploying and recording are hard to reverse or require the user's own voice/screen.
+
 ## Release/Submission Entries
 
 When a deployment or submission artifact is created, add entries for:
