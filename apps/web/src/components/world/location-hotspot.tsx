@@ -22,6 +22,17 @@ export function LocationHotspot({
 }: LocationHotspotProps) {
   const hotspot = LOCATION_HOTSPOTS[locationId];
 
+  // Highlighting lives on the compact label badge, not a box spanning the
+  // full (deliberately generous, imprecise) click rect - a hard-edged
+  // rectangle over hand-drawn art reads as a UI bug, not a button.
+  const badgeStateClass = eligible
+    ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/30"
+    : selected
+      ? "border-[var(--color-lemon)] bg-[var(--color-lemon)]/30"
+      : state === "locked"
+        ? "border-dashed border-white/70 bg-[var(--color-paper)]/70"
+        : "border-transparent bg-[var(--color-paper)]/85 group-hover:border-[var(--color-leaf)] group-hover:bg-[var(--color-leaf)]/20";
+
   return (
     <button
       type="button"
@@ -39,21 +50,17 @@ export function LocationHotspot({
         width: `${hotspot.rect.width}%`,
         height: `${hotspot.rect.height}%`,
       }}
-      className={`absolute flex min-h-11 min-w-11 flex-col items-center justify-end gap-1 rounded-lg border-2 px-2 pb-2 text-center shadow-sm transition-all hover:shadow-md ${
-        eligible
-          ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/25"
-          : selected
-            ? "border-[var(--color-lemon)] bg-[var(--color-lemon)]/20"
-            : state === "locked"
-              ? "border-dashed border-white/60 bg-black/5 opacity-80"
-              : "border-white/50 bg-black/5 hover:border-[var(--color-leaf)] hover:bg-[var(--color-leaf)]/15"
-      }`}
+      className="group absolute flex min-h-11 min-w-11 flex-col items-center justify-end pb-2 text-center"
     >
-      <span className="rounded bg-[var(--color-paper)]/85 px-1 font-[family-name:var(--font-display)] text-sm text-[var(--color-ink)] sm:text-base">
-        {hotspot.label}
-      </span>
-      <span className="rounded bg-[var(--color-paper)]/85 px-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-ink)]/70 sm:text-xs">
-        {LOCATION_STATE_LABEL[state]}
+      <span
+        className={`flex flex-col gap-0.5 rounded-lg border-2 px-2 py-1 shadow-sm transition-all group-hover:shadow-md ${badgeStateClass}`}
+      >
+        <span className="font-[family-name:var(--font-display)] text-sm text-[var(--color-ink)] sm:text-base">
+          {hotspot.label}
+        </span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-ink)]/70 sm:text-xs">
+          {LOCATION_STATE_LABEL[state]}
+        </span>
       </span>
     </button>
   );
