@@ -700,6 +700,10 @@ Turn the vertical slice into a reliable submission.
 
 ## Stage 15 - Deployment, Repository, Video, And Submission
 
+**Status:** In progress, started 2026-07-11 23:55 CST.
+
+**Evidence so far:** README completed (task 1), `.env.example` confirmed secret-free (task 2), web app deployed to Vercel production at `https://web-seven-pied-41.vercel.app` and verified live (task 3, see CHG-20260712-023), extension zip artifact built and installation documented in the README (task 4). Remaining: silent fallback capture, three-minute demo video, exact-duration/audio/caption/permission verification, second-device/clean-profile playback check, submission checklist, code freeze, final change-log/verification records (tasks 6-12) - all deferred pending the user's involvement (recording needs their voice/screen). Note for the demo script: the extension's content-script match scope is `localhost`/`127.0.0.1` only, so Scout only activates against the local `/demo-store`, not the deployed URL.
+
 ### Objective
 
 Produce and verify all official deliverables before the deadline.
