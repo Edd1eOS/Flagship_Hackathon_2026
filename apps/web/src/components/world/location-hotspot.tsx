@@ -6,6 +6,7 @@ export type LocationHotspotProps = {
   locationId: LocationId;
   state: LocationState;
   selected: boolean;
+  eligible: boolean;
   onSelect: (locationId: LocationId) => void;
 };
 
@@ -16,6 +17,7 @@ export function LocationHotspot({
   locationId,
   state,
   selected,
+  eligible,
   onSelect,
 }: LocationHotspotProps) {
   const hotspot = LOCATION_HOTSPOTS[locationId];
@@ -25,7 +27,11 @@ export function LocationHotspot({
       type="button"
       onClick={() => onSelect(locationId)}
       aria-pressed={selected}
-      aria-label={`${hotspot.label} — ${LOCATION_STATE_LABEL[state]}`}
+      aria-label={
+        eligible
+          ? `${hotspot.label} — ${LOCATION_STATE_LABEL[state]} — tap to assign`
+          : `${hotspot.label} — ${LOCATION_STATE_LABEL[state]}`
+      }
       title={hotspot.label}
       style={{
         left: `${hotspot.rect.left}%`,
@@ -34,11 +40,13 @@ export function LocationHotspot({
         height: `${hotspot.rect.height}%`,
       }}
       className={`absolute flex min-h-11 min-w-11 flex-col items-center justify-end gap-1 rounded-lg border-2 bg-transparent px-2 pb-2 text-center transition-colors ${
-        selected
-          ? "border-[var(--color-lemon)] bg-[var(--color-lemon)]/20"
-          : state === "locked"
-            ? "border-dashed border-white/60 opacity-80"
-            : "border-transparent hover:border-[var(--color-leaf)]"
+        eligible
+          ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/25"
+          : selected
+            ? "border-[var(--color-lemon)] bg-[var(--color-lemon)]/20"
+            : state === "locked"
+              ? "border-dashed border-white/60 opacity-80"
+              : "border-transparent hover:border-[var(--color-leaf)]"
       }`}
     >
       <span className="rounded bg-[var(--color-paper)]/85 px-1 font-[family-name:var(--font-display)] text-sm text-[var(--color-ink)] sm:text-base">

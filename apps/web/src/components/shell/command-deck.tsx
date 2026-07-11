@@ -1,7 +1,6 @@
 import { ArrowLeft, Radar, Sparkles } from "lucide-react";
 import type { Mission, PurchaseDecision } from "@lemonade/domain";
 
-import type { TownResidentView } from "@lemonade/game-engine";
 import { LOCATION_STATE_LABEL } from "../world/location-state-label";
 import type { LocationId, LocationState } from "@lemonade/domain";
 
@@ -13,15 +12,30 @@ export type SelectedLocationContext = {
   reason: string | null;
 };
 
+export type ResidentRow = {
+  id: string;
+  role: string;
+  locationLabel: string | null;
+  isPreview: boolean;
+  isActive: boolean;
+};
+
 export type CommandDeckProps = {
   readyDecisions: PurchaseDecision[];
   openMissions: Mission[];
-  residents: TownResidentView[];
+  residentRows: ResidentRow[];
+  selectedResidentId: string | null;
+  canConfirmPlan: boolean;
+  assignmentWorking: boolean;
+  assignmentError: string | null;
   patrolLabel: string;
   selectedLocation: SelectedLocationContext | null;
   onClearSelection: () => void;
   onStartCapture: () => void;
   onReviewDecision: (decisionId: string) => void;
+  onSelectResident: (residentId: string) => void;
+  onCancelAssignment: (residentId: string) => void;
+  onConfirmPlan: () => void;
 };
 
 const ROLE_LABEL: Record<string, string> = {
@@ -32,12 +46,19 @@ const ROLE_LABEL: Record<string, string> = {
 export function CommandDeck({
   readyDecisions,
   openMissions,
-  residents,
+  residentRows,
+  selectedResidentId,
+  canConfirmPlan,
+  assignmentWorking,
+  assignmentError,
   patrolLabel,
   selectedLocation,
   onClearSelection,
   onStartCapture,
   onReviewDecision,
+  onSelectResident,
+  onCancelAssignment,
+  onConfirmPlan,
 }: CommandDeckProps) {
   if (selectedLocation) {
     return (
@@ -151,22 +172,61 @@ export function CommandDeck({
           Town plan
         </h3>
         <ul className="mt-2 flex flex-col gap-1.5">
-          {residents
-            .filter((resident) => resident.role !== "scout")
-            .map((resident) => (
-              <li
-                key={resident.id}
-                className="flex items-center justify-between text-sm text-[var(--color-ink)]"
+          {residentRows.map((resident) => (
+            <li key={resident.id} className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onSelectResident(resident.id)}
+                aria-pressed={selectedResidentId === resident.id}
+                className={`flex min-h-11 flex-1 items-center justify-between rounded-lg border px-2 text-sm ${
+                  selectedResidentId === resident.id
+                    ? "border-[var(--color-lemon)] bg-[var(--color-lemon)]/20"
+                    : "border-transparent"
+                }`}
               >
-                <span className="font-semibold">
+                <span className="font-semibold text-[var(--color-ink)]">
                   {ROLE_LABEL[resident.role] ?? resident.role}
                 </span>
                 <span className="text-[var(--color-ink)]/60">
-                  {resident.projectId ? "Assigned" : "Unassigned"}
+                  {resident.isActive
+                    ? `Active — ${resident.locationLabel}`
+                    : resident.isPreview
+                      ? `Previewed — ${resident.locationLabel}`
+                      : "Unassigned"}
                 </span>
-              </li>
-            ))}
+              </button>
+              {resident.isPreview ? (
+                <button
+                  type="button"
+                  onClick={() => onCancelAssignment(resident.id)}
+                  className="min-h-11 shrink-0 rounded-full border border-[var(--color-line)] px-3 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+              ) : null}
+            </li>
+          ))}
         </ul>
+        {selectedResidentId ? (
+          <p className="mt-2 text-xs text-[var(--color-ink)]/70">
+            Tap an available project in town to preview this assignment.
+          </p>
+        ) : null}
+        {assignmentError ? (
+          <p role="alert" className="mt-2 text-xs text-[var(--color-coral)]">
+            {assignmentError}
+          </p>
+        ) : null}
+        {canConfirmPlan ? (
+          <button
+            type="button"
+            disabled={assignmentWorking}
+            onClick={onConfirmPlan}
+            className="mt-2 min-h-11 w-full rounded-full bg-[var(--color-leaf)] text-sm font-bold text-white disabled:opacity-40"
+          >
+            Confirm plan
+          </button>
+        ) : null}
       </section>
 
       <section

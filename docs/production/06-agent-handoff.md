@@ -21,19 +21,20 @@
 - Stage 11: **completed and verified** (controlled storefront, confidence-gated WXT Scout, privacy controls).
 - Stage 12: **completed and verified** (exact-once storage bridge and state-safe Scout return).
 - Stage 13: **completed and verified** (art integration, scene feedback; product-cutout art explicitly cut, no image-generation tool available).
-- Stages 14-15: not started.
+- Stage 14: **in progress** (resident-to-project assignment UI and its required Playwright path landed; verification/accessibility/performance/hardening pass continuing - see CHG-20260711-020).
+- Stage 15: not started.
 
 Read `docs/production/02-change-log.md` entries `CHG-20260711-001` through `CHG-20260711-018` for the exact evidence behind every stage above. Read `docs/production/01-implementation-roadmap.md` for the per-stage Status/Evidence lines, which are kept current.
 
 ### Git and remote safety
 
 - Working directory: `D:\Flagship_Hackathon`.
-- Local Git is valid on branch `main`.
+- Local Git is valid on branch `main`, tracking `origin/main`.
 - Local `origin`: `https://github.com/Edd1eOS/Flagship_Hackathon_2026.git`.
-- Repository still has **no commits** and has **not been pushed**. `git status --short --branch` reports `No commits yet on main`; all project/user files are untracked.
-- No push, commit, force push, remote branch creation, or other remote mutation has occurred at any point in this project.
-- Do not push or commit until the user explicitly authorises it, and re-check the remote (`git ls-remote`) immediately before any first push because external state can change between sessions.
-- Never delete `.git`, rewrite history, or use destructive Git commands.
+- One commit exists and has been pushed: `d73cc176af9eb580401ab616e1ad5a90efd63d36` ("Implement Lemonade P0 vertical slice through Stage 13"), pushed 2026-07-11 22:55 CST at explicit user request, after a fresh `git ls-remote` confirmed the remote was still empty. See CHG-20260711-019.
+- All Stage 14+ work is currently uncommitted on top of that pushed commit until the user explicitly authorises another commit/push.
+- Re-check the remote (`git ls-remote`) immediately before any further push because external state can change between sessions.
+- Never delete `.git`, force push, rewrite history, or use destructive Git commands.
 
 ### Toolchain
 
@@ -104,7 +105,7 @@ Always invoke package scripts through `corepack pnpm ...`. Node.js `>=22`. `pnpm
 
 **`apps/extension`**: WXT React, Shadow Root. `src/detection/product-detection.ts` extracts JSON-LD/Open Graph/semantic product data and scores confidence; `src/companion/shopping-scout.tsx` is the real `ShoppingScout` (hidden/peeking/curious/prompting/paused states) using `scout-sheet.png`, with Pause/Continue anyway/Snooze/Hide; `src/bridge/messages.ts` plus the WXT background handle `STORE_HANDOFF`/`GET_PENDING_HANDOFF`/`ACK_HANDOFF` over `storage`. Manifest permissions: `["storage"]`; content-script match scope: `http://127.0.0.1/*` and `http://localhost/*` only.
 
-**`tests/e2e/town-dashboard.spec.ts`**: eight Chromium paths (desktop/mobile dashboard stability with saved 1440x900/390x844 baselines regenerated after Stage 13 art landed, manual Capture, Buy/Use-existing/Extend outcomes, repair+allocation, My Stuff/invalid-import fallback) covering hydration/console safety, keyboard activation, horizontal overflow, mobile snap states, and reduced motion.
+**`tests/e2e/town-dashboard.spec.ts`**: ten Chromium paths (desktop/mobile dashboard stability with saved 1440x900/390x844 baselines regenerated after Stage 13 art landed, manual Capture, Buy/Use-existing/Extend outcomes, repair+allocation, resident-to-project assignment confirm and cancel, My Stuff/invalid-import fallback) covering hydration/console safety, keyboard activation, horizontal overflow, mobile snap states, and reduced motion.
 
 **`tests/e2e/extension-scout.spec.ts`**: four Chromium paths loading the real unpacked extension - high-confidence prompt, Pause tab-local + Hide, Snooze, and the full Pause -> storage -> web import -> ACK -> return -> refresh handoff (asserts exactly one decision is created).
 
@@ -113,7 +114,7 @@ Always invoke package scripts through `corepack pnpm ...`. Node.js `>=22`. `pnpm
 `corepack pnpm test` (Vitest, `--passWithNoTests`): **141 tests passing** across these files:
 `packages/domain/src/schemas.test.ts`, `seed.test.ts`, `transaction.test.ts`, `decision-machine.test.ts`, `decision-commands.test.ts`, `overlap.test.ts`, `mission-commands.test.ts`, `import-command.test.ts`; `packages/game-engine/src/town.test.ts`; `apps/web/src/repositories/web-local-repository.test.ts`, `apps/web/src/store/lemonade-store.test.ts`; `apps/extension/src/detection/product-detection.test.ts`.
 
-### Verification last run (2026-07-11 22:50 CST) - all PASS
+### Verification last run (2026-07-11 23:10 CST) - all PASS
 
 ```text
 corepack pnpm typecheck        -> PASS (4 packages)
@@ -122,7 +123,7 @@ corepack pnpm test              -> PASS (141/141)
 corepack pnpm format:check     -> PASS
 corepack pnpm --filter @lemonade/web build       -> PASS
 corepack pnpm --filter @lemonade/extension build -> PASS (1.63 MB total, unchanged)
-corepack pnpm test:e2e         -> PASS (12/12 Chromium)
+corepack pnpm test:e2e         -> PASS (14/14 Chromium)
 ```
 
 ### Important resolved tooling incident (historical, do not repeat)
@@ -133,9 +134,9 @@ Sandboxed pnpm installs can appear to hang at high CPU because pnpm cannot safel
 
 No image-generation tool is available in this environment. All Stage 13 art is either the previously-approved sprite sheets (town base, Scout, Workshop/Mender/Host) or Pillow crops of them. Do not claim new art can be generated on demand; if further art is genuinely required, ask the user how they want it produced.
 
-### Immediate next actions (start Stage 14)
+### Immediate next actions (continue Stage 14)
 
-Stage 14 turns the vertical slice into a reliable submission: run the full verification matrix once more after any further change, complete the remaining Playwright paths listed in the roadmap (first open/seed, extension Pause/Continue handoff, offline web fallback), add ARIA snapshots, validate touch targets and keyboard controls, inspect console/network errors, test anonymous deployment in a clean browser profile, profile image sizes/preload behaviour (the art files added in Stage 13 are multi-hundred-KB to low-MB PNGs and have not yet been optimised), and remove dead code/debug output. The deadline is 2026-07-12 10:00 Shanghai CST/12:00 Sydney AEST - prioritise the critical demo path over further polish. The repository still has zero commits and has not been pushed; no remote mutation is authorised without explicit user approval.
+Resident-to-project assignment (select resident -> highlighted eligible locations -> preview -> confirm/cancel) is implemented and its required roadmap Playwright path passes; see CHG-20260711-020. Remaining Stage 14 work: complete the remaining Playwright paths listed in the roadmap (first open/seed, extension Pause/Continue handoff, offline web fallback), add ARIA snapshots, validate touch targets and keyboard controls, inspect console/network errors, test anonymous deployment in a clean browser profile, profile image sizes/preload behaviour (the art files added in Stage 13 are multi-hundred-KB to low-MB PNGs and have not yet been optimised), remove dead code/debug output, and perform the mandatory code-style review from `04-iteration-workflow.md`. The deadline is 2026-07-12 10:00 Shanghai CST/12:00 Sydney AEST - prioritise the critical demo path over further polish. Run the full verification matrix once more after any further change. Re-check `git ls-remote` before any further push; no remote mutation beyond what the user has already authorised (push after each verified iteration) is permitted without asking again.
 
 ---
 
