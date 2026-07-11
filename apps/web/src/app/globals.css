@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #fffdf7;
+  --color-cream: #f6efdd;
+  --color-ink: #2f291f;
+  --color-lemon: #f7d84a;
+  --color-leaf: #4f8a50;
+  --color-coral: #e8705f;
+  --color-sky: #6fa8c9;
+  --color-line: #d8d0c0;
+  --font-display: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Focus must stay visible over illustrated backgrounds. */
+:focus-visible {
+  outline: 3px solid var(--color-ink);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/*
+ * Reduced motion is resolved in JS (system preference + optional manual
+ * override, see lib/use-motion-preference.ts) and written to
+ * documentElement.dataset.motion. The plain @media block covers the brief
+ * window before that JS runs; the attribute selector covers explicit
+ * override choices the media query alone cannot express.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}

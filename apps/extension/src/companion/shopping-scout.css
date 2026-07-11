@@ -1,0 +1,87 @@
+.lemonade-scout {
+  bottom: 20px;
+  color: #2f291f;
+  font-family: Arial, sans-serif;
+  position: fixed;
+  right: 20px;
+  z-index: 2147483647;
+}
+.lemonade-scout__mouse {
+  background-repeat: no-repeat;
+  background-size: 300% 200%;
+  height: 92px;
+  margin-left: auto;
+  width: 92px;
+}
+.lemonade-scout__peek,
+.lemonade-scout__prompt {
+  background: #fffdf7;
+  border: 2px solid #2f291f;
+  border-radius: 8px;
+  box-shadow: 4px 4px 0 #f7d84a;
+}
+.lemonade-scout__peek {
+  min-height: 44px;
+  padding: 8px 12px;
+}
+.lemonade-scout__prompt {
+  margin-top: 8px;
+  max-width: 300px;
+  padding: 14px;
+}
+.lemonade-scout__prompt strong,
+.lemonade-scout__prompt p {
+  display: block;
+  margin: 0 0 8px;
+}
+.lemonade-scout__eyebrow {
+  color: #4f8a50;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.lemonade-scout__actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+}
+.lemonade-scout__actions button {
+  background: #2f291f;
+  border: 0;
+  border-radius: 999px;
+  color: white;
+  min-height: 44px;
+  padding: 8px;
+}
+.lemonade-scout__secondary {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+.lemonade-scout__secondary button,
+.lemonade-scout__prompt > button {
+  background: transparent;
+  border: 0;
+  min-height: 44px;
+  padding: 4px;
+  text-decoration: underline;
+}
+.lemonade-scout button:focus-visible {
+  outline: 3px solid #2f291f;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lemonade-scout--peeking .lemonade-scout__mouse {
+    animation: lemonade-peek 2.4s ease-in-out infinite;
+  }
+}
+@keyframes lemonade-peek {
+  0%,
+  80%,
+  100% {
+    transform: translateX(8px);
+  }
+  40% {
+    transform: translateX(0);
+  }
+}
