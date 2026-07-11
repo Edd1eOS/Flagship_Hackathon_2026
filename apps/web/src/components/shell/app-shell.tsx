@@ -18,6 +18,7 @@ import { WorldStage } from "../world/world-stage";
 import { CaptureFlow } from "../business/capture-flow";
 import { ReadyReview } from "../business/ready-review";
 import { DecisionsPanel } from "../business/decisions-panel";
+import { GoalPanel } from "../business/goal-panel";
 import { MyStuffPanel } from "../business/my-stuff-panel";
 import {
   CommandDeck,
@@ -323,6 +324,12 @@ export function AppShell() {
       />
     ) : activeNav === "my-stuff" ? (
       <MyStuffPanel items={appState.ownedItems} dispatch={dispatch} />
+    ) : activeNav === "goal" ? (
+      <GoalPanel
+        goal={goal}
+        plannedAllocations={appState.plannedAllocations}
+        decisions={appState.decisions}
+      />
     ) : (
       townCommandDeck
     );
@@ -381,30 +388,20 @@ export function AppShell() {
         />
 
         <div className="flex min-h-0 flex-1 flex-col">
-          {activeNav !== "goal" ? (
-            <>
-              <div className="hidden min-h-0 flex-1 lg:flex">
-                <div className="relative min-h-0 flex-1">{worldStage}</div>
-                {contextualDeck}
-              </div>
-              <div className="hidden lg:block">{decisionDock}</div>
+          <div className="hidden min-h-0 flex-1 lg:flex">
+            <div className="relative min-h-0 flex-1">{worldStage}</div>
+            {contextualDeck}
+          </div>
+          <div className="hidden lg:block">{decisionDock}</div>
 
-              <div className="flex min-h-0 flex-1 flex-col lg:hidden">
-                <div className="relative h-[42vh] min-h-[240px] shrink-0">
-                  {worldStage}
-                </div>
-                <MobileBottomSheet header={decisionDock}>
-                  {contextualDeck}
-                </MobileBottomSheet>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-1 items-center justify-center px-6 text-center">
-              <p className="text-sm text-[var(--color-ink)]/60">
-                This section opens later in the build.
-              </p>
+          <div className="flex min-h-0 flex-1 flex-col lg:hidden">
+            <div className="relative h-[42vh] min-h-[240px] shrink-0">
+              {worldStage}
             </div>
-          )}
+            <MobileBottomSheet header={decisionDock}>
+              {contextualDeck}
+            </MobileBottomSheet>
+          </div>
         </div>
       </div>
 

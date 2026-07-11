@@ -477,3 +477,25 @@ test("My Stuff Quick Add and invalid import fallback remain usable", async ({
       .getByText("Rain shell", { exact: true }),
   ).toBeVisible();
 });
+
+test("Goal tab shows real progress beside the town, not a placeholder", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Goal" }).click();
+  await expect(
+    page.getByText("This section opens later in the build."),
+  ).toHaveCount(0);
+  const goal = page.getByRole("complementary", { name: "Goal" });
+  await expect(
+    goal.getByRole("heading", { name: "Japan trip fund" }),
+  ).toBeVisible();
+  await expect(
+    goal.getByText("$350.00 of $1,800.00 tracked (19%)"),
+  ).toBeVisible();
+  await expect(goal.getByRole("progressbar")).toBeVisible();
+  await expect(goal.getByText("No planned allocations yet.")).toBeVisible();
+  // The world stays the dashboard - Goal is a side panel, not a full takeover.
+  await expect(page.getByRole("button", { name: /Home Nook/ })).toBeVisible();
+});
