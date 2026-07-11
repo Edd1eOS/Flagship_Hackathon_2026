@@ -1,6 +1,6 @@
 "use client";
 
-import { Radar, Settings, Volume2, VolumeX } from "lucide-react";
+import { Radar, Settings, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 
 import type { MotionOverride } from "../../lib/use-motion-preference";
@@ -9,6 +9,9 @@ export type TopBarProps = {
   profileName: string;
   goalName: string | null;
   goalDetail: string | null;
+  level: number;
+  totalXp: number;
+  xpPerLevel: number;
   patrolLabel: string;
   motionOverride: MotionOverride;
   onMotionOverrideChange: (value: MotionOverride) => void;
@@ -18,10 +21,14 @@ export function TopBar({
   profileName,
   goalName,
   goalDetail,
+  level,
+  totalXp,
+  xpPerLevel,
   patrolLabel,
   motionOverride,
   onMotionOverrideChange,
 }: TopBarProps) {
+  const xpIntoLevel = totalXp % xpPerLevel;
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -48,6 +55,15 @@ export function TopBar({
       </div>
 
       <div className="flex items-center gap-2 lg:gap-3">
+        <span
+          title={`Level ${level} · ${xpIntoLevel}/${xpPerLevel} XP toward the next level (${totalXp} XP total). Earned by honestly reviewing decisions, not by spending.`}
+          aria-label={`Level ${level}, ${xpIntoLevel} of ${xpPerLevel} experience points toward the next level`}
+          className="flex items-center gap-1.5 rounded-full border border-[var(--color-line)] px-2 py-1 text-xs font-semibold text-[var(--color-ink)]/70 sm:px-3"
+        >
+          <Sparkles size={14} aria-hidden="true" />
+          Lv {level}
+        </span>
+
         <span
           title={`Patrol: ${patrolLabel}`}
           aria-label={`Patrol: ${patrolLabel}`}

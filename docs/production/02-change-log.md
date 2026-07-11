@@ -1264,6 +1264,41 @@ corepack pnpm test:e2e         -> PASS (18/18 Chromium, up from 17)
 - The Vercel alias is stable across redeploys (confirmed earlier in CHG-20260712-023), but if the project is ever renamed or the alias changes, `allowed-origins.ts` must be updated and the extension rebuilt/reloaded, or Scout will silently stop activating on the deployed page.
 - The web app changed (`onboarding-hint.tsx`, `app-shell.tsx`), so it needs a fresh Vercel deploy for the hint to appear live; the extension change needs a rebuild plus the user reloading the unpacked extension in `chrome://extensions`, since Chrome does not hot-reload unpacked extensions.
 
+### CHG-20260712-027 - Extension icon, locked-location unlock hints, and surfaced the XP/level system
+
+- Timestamp: 2026-07-12 01:20 CST
+- Author/agent: Claude implementation agent
+- Stage: n/a (usability follow-up)
+- Change type: fix + feature
+- Status: completed
+- Request/source: user reported the extension "looked gray and unusable," that the five town locations "don't respond to clicks and I don't know what they're for," and that "the whole scene/currency system feels dead." Diagnosed each rather than guessing.
+
+#### Root causes and changes
+
+1. **Extension icon.** The manifest never declared an `icons` field, so Chrome/Edge fell back to an auto-generated gray-square placeholder (first letter of the name on gray) in both the extensions page and the toolbar puzzle-piece menu - it read as broken even though the background service worker was genuinely running (confirmed via `context.serviceWorkers()` and a `chrome://extensions` screenshot showing the toggle already on, no error state). Added `apps/extension/public/icon/{16,32,48,96,128}.png` (resized from the existing web favicon for consistent branding); WXT auto-wires files at that exact path/size convention into `manifest.icons` with zero config changes. Verified the manifest picked them up and the extensions page now shows the real lemon-yellow mark. **Separately reported by the user afterward: the extension is still completely non-functional for them in both Chrome and Edge even with the correct chrome-mv3 folder selected - this fix does not resolve that, and is being tracked as a distinct, still-open problem (see next entry / follow-up) since it doesn't reproduce in this sandbox.**
+2. **Locked-location detail panel.** `command-deck.tsx`'s "Location details" view only ever showed a "Why it's open" explanation for already-unlocked projects; a locked one showed nothing beyond "State: Locked," giving no indication of how to change that. Added `LOCKED_UNLOCK_HINTS` in `app-shell.tsx` (UI copy only, not a new domain rule - the actual unlock logic already lives in `PROJECT_RECIPES`) and a new "How to unlock" `<dt>/<dd>` pair, e.g. Workshop -> "Repair or reuse something you already own from a 'Ready' decision to unlock this."
+3. **XP/level progression.** `packages/game-engine/progression.ts` (`getProgression`, `XP_PER_LEVEL = 30`) has existed since early stages with full domain support (`state.reflections`, `REFLECTION_XP = 10` per honest final review) but was never imported anywhere in `apps/web` - confirmed via a precise grep with zero matches. The entire reward feedback loop was invisible, which is almost certainly what read as "the currency system seems dead." Added a small "Lv N" badge to `TopBar` (title/aria-label spell out XP progress toward the next level) computed via `getProgression(appState)` in `app-shell.tsx`, updating reactively as reflections accumulate. Scope was confirmed with the user first (asked rather than assumed, since surfacing dormant systems this close to a deadline is a real scope decision) - deliberately kept to a persistent badge, not a new transient toast/animation, to limit risk.
+4. Also asked about a "paste a link" fallback capture path; user confirmed the existing default "Manual" tab in Capture (already tested, already the primary path in the onboarding hint) already serves this purpose - no new feature needed, since a true link-fetch fallback would require a backend proxy this app intentionally doesn't have.
+
+#### Verification
+
+```text
+corepack pnpm typecheck        -> PASS (4 packages)
+corepack pnpm lint             -> PASS
+corepack pnpm test              -> PASS (141/141)
+corepack pnpm format:check     -> PASS
+corepack pnpm --filter @lemonade/web build       -> PASS
+corepack pnpm --filter @lemonade/extension zip   -> PASS (1.51 MB)
+corepack pnpm test:e2e         -> PASS (19/19 Chromium, up from 18)
+```
+
+- Added "Level badge reflects reflection XP after a decision review" (asserts Lv 1 initially, then 10/30 XP total after one Buy resolution) and screenshotted the rebuilt extensions page directly (not just `manifest.json`) to confirm the icon renders.
+
+#### Risks and follow-up
+
+- **Open:** the user reports the extension does not work at all for them (both Chrome and Edge, correct unpacked folder selected), independent of the icon issue. Not reproduced in this sandbox (background service worker starts, content scripts inject, e2e suite passes against a freshly built unpacked load). Needs the user's exact symptom/screenshot to diagnose further - explicitly deprioritized by the user ("that one fix last") in favor of the fixes above.
+- The XP badge is read-only/derived; there is still no transient "+10 XP" feedback moment when a reflection is created, only the persistent total. Flagged as a possible follow-up, not requested.
+
 ## Release/Submission Entries
 
 When a deployment or submission artifact is created, add entries for:

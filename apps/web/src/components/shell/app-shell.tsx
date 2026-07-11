@@ -1,7 +1,11 @@
 "use client";
 
 import type { LocationId } from "@lemonade/domain";
-import { selectTownViewModel } from "@lemonade/game-engine";
+import {
+  getProgression,
+  selectTownViewModel,
+  XP_PER_LEVEL,
+} from "@lemonade/game-engine";
 import { useEffect, useMemo, useState } from "react";
 
 import { LOCATION_HOTSPOTS } from "../../assets/manifest";
@@ -41,6 +45,17 @@ const ASSIGNABLE_PROJECT_LOCATIONS: readonly LocationId[] = [
   "little_station",
   "quiet_garden",
 ];
+
+// What unlocks each still-locked location, shown so a first-time visitor
+// isn't left guessing why tapping a locked building does nothing.
+const LOCKED_UNLOCK_HINTS: Partial<Record<LocationId, string>> = {
+  workshop:
+    'Repair or reuse something you already own from a "Ready" decision to unlock this.',
+  picnic_green: 'Complete an honest "Ready" decision review to unlock this.',
+  little_station:
+    "Plan part of a skipped purchase toward your goal to unlock this.",
+  quiet_garden: "Not part of this build yet.",
+};
 
 export function AppShell() {
   const status = useLemonade((state) => state.status);
@@ -88,6 +103,10 @@ export function AppShell() {
     () => (appState ? selectOpenMissions(appState) : []),
     [appState],
   );
+  const progression = useMemo(
+    () => (appState ? getProgression(appState) : { totalXp: 0, level: 1 }),
+    [appState],
+  );
 
   const goal = appState?.goals[0] ?? null;
 
@@ -103,12 +122,17 @@ export function AppShell() {
           (project) => project.locationId === selectedLocationId,
         )?.reason ?? null)
       : null;
+    const lockedHint =
+      location.state === "locked"
+        ? (LOCKED_UNLOCK_HINTS[selectedLocationId] ?? null)
+        : null;
     return {
       id: selectedLocationId,
       label: hotspot.label,
       blurb: hotspot.blurb,
       state: location.state,
       reason,
+      lockedHint,
     };
   }, [selectedLocationId, townViewModel]);
 
@@ -379,6 +403,9 @@ export function AppShell() {
               )} · ${formatAud(goal.plannedAllocationTotal)} planned so far`
             : null
         }
+        level={progression.level}
+        totalXp={progression.totalXp}
+        xpPerLevel={XP_PER_LEVEL}
         patrolLabel={PATROL_LABEL}
         motionOverride={motionOverride}
         onMotionOverrideChange={setMotionOverride}

@@ -512,3 +512,20 @@ test("Onboarding hint dismisses and stays dismissed after reload", async ({
   await page.reload();
   await expect(page.getByRole("note")).toBeHidden();
 });
+
+test("Level badge reflects reflection XP after a decision review", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await expect(page.getByText("Lv 1", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Review now" }).click();
+  const review = page.getByRole("complementary", { name: "Ready review" });
+  await review.getByRole("button", { name: "Buy — neutral" }).click();
+
+  await expect(page.getByText("Lv 1", { exact: true })).toBeVisible();
+  await expect(
+    page.getByTitle(/10\/30 XP toward the next level \(10 XP total\)/),
+  ).toBeVisible();
+});
