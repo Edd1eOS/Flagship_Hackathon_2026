@@ -1,6 +1,13 @@
 "use client";
 
-import { Radar, Settings, Sparkles, Volume2, VolumeX } from "lucide-react";
+import {
+  HelpCircle,
+  Radar,
+  Settings,
+  Sparkles,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { useState } from "react";
 
 import type { MotionOverride } from "../../lib/use-motion-preference";
@@ -15,6 +22,7 @@ export type TopBarProps = {
   patrolLabel: string;
   motionOverride: MotionOverride;
   onMotionOverrideChange: (value: MotionOverride) => void;
+  onShowHelp: () => void;
 };
 
 export function TopBar({
@@ -27,6 +35,7 @@ export function TopBar({
   patrolLabel,
   motionOverride,
   onMotionOverrideChange,
+  onShowHelp,
 }: TopBarProps) {
   const xpIntoLevel = totalXp % xpPerLevel;
   const [soundEnabled, setSoundEnabled] = useState(false);
@@ -55,6 +64,15 @@ export function TopBar({
       </div>
 
       <div className="flex items-center gap-2 lg:gap-3">
+        <button
+          type="button"
+          aria-label="How this works"
+          onClick={onShowHelp}
+          className="flex h-11 w-11 items-center justify-center rounded-full text-[var(--color-ink)] hover:bg-[var(--color-cream)]"
+        >
+          <HelpCircle size={18} aria-hidden="true" />
+        </button>
+
         <span
           title={`Level ${level} · ${xpIntoLevel}/${xpPerLevel} XP toward the next level (${totalXp} XP total). Earned by honestly reviewing decisions, not by spending.`}
           aria-label={`Level ${level}, ${xpIntoLevel} of ${xpPerLevel} experience points toward the next level`}
