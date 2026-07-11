@@ -1,6 +1,7 @@
 import { createShadowRootUi } from "wxt/utils/content-script-ui/shadow-root";
 import ReactDOM from "react-dom/client";
 
+import { ALLOWED_MATCHES } from "../src/allowed-origins";
 import { ShoppingScout } from "../src/companion/shopping-scout";
 import {
   detectProduct,
@@ -9,7 +10,7 @@ import {
 import "../src/companion/shopping-scout.css";
 
 export default defineContentScript({
-  matches: ["http://localhost/*", "http://127.0.0.1/*"],
+  matches: ALLOWED_MATCHES,
   cssInjectionMode: "ui",
 
   async main(ctx) {

@@ -1,5 +1,7 @@
 import { defineConfig } from "wxt";
 
+import { ALLOWED_MATCHES } from "./src/allowed-origins";
+
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: {
@@ -10,7 +12,7 @@ export default defineConfig({
     web_accessible_resources: [
       {
         resources: ["scout-sheet.png"],
-        matches: ["http://127.0.0.1/*", "http://localhost/*"],
+        matches: ALLOWED_MATCHES,
       },
     ],
   },

@@ -499,3 +499,16 @@ test("Goal tab shows real progress beside the town, not a placeholder", async ({
   // The world stays the dashboard - Goal is a side panel, not a full takeover.
   await expect(page.getByRole("button", { name: /Home Nook/ })).toBeVisible();
 });
+
+test("Onboarding hint dismisses and stays dismissed after reload", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const hint = page.getByRole("note");
+  await expect(hint.getByText(/New here\?/)).toBeVisible();
+  await hint.getByRole("button", { name: "Got it" }).click();
+  await expect(hint).toBeHidden();
+  await page.reload();
+  await expect(page.getByRole("note")).toBeHidden();
+});

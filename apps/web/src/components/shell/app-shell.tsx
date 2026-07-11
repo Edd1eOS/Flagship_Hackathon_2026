@@ -29,6 +29,7 @@ import { DecisionDock } from "./decision-dock";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { MobileBottomSheet } from "./mobile-bottom-sheet";
 import { NavRail } from "./nav-rail";
+import { OnboardingHint } from "./onboarding-hint";
 import type { NavId } from "./nav-items";
 import { TopBar } from "./top-bar";
 import { SceneDirector } from "../../effects/scene-director";
@@ -55,6 +56,10 @@ export function AppShell() {
   const [reviewDecisionId, setReviewDecisionId] = useState<string | null>(null);
   const [invalidImport, setInvalidImport] = useState(() =>
     Boolean(new URLSearchParams(window.location.search).get("import")),
+  );
+  const [onboardingDismissed, setOnboardingDismissed] = useState(
+    () =>
+      window.localStorage.getItem("lemonade.onboarding-dismissed") === "true",
   );
   const [motionOverride, setMotionOverride] = useMotionPreference();
   const [selectedResidentId, setSelectedResidentId] = useState<string | null>(
@@ -378,6 +383,17 @@ export function AppShell() {
         motionOverride={motionOverride}
         onMotionOverrideChange={setMotionOverride}
       />
+      {onboardingDismissed ? null : (
+        <OnboardingHint
+          onDismiss={() => {
+            window.localStorage.setItem(
+              "lemonade.onboarding-dismissed",
+              "true",
+            );
+            setOnboardingDismissed(true);
+          }}
+        />
+      )}
       <SceneDirector />
 
       <div className="flex min-h-0 flex-1">
