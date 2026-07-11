@@ -1228,6 +1228,42 @@ corepack pnpm test:e2e         -> PASS (17/17 Chromium)
 - Manually screenshotted the idle and eligible states after the change and visually confirmed the badge reads as a compact tag, not a rectangle over the art. Desktop/mobile screenshot baselines regenerated and re-verified passing.
 - Redeployed to Vercel; see the deployment follow-up entry.
 
+### CHG-20260712-026 - Extend Scout to the deployed domain; add a first-open hint
+
+- Timestamp: 2026-07-12 01:05 CST
+- Author/agent: Claude implementation agent
+- Stage: n/a (usability follow-up)
+- Change type: feature + fix
+- Status: completed
+- Request/source: user reported the dashboard gave no clue how to use it at a glance, and asked how to test the shopping-interception feature at all given the extension only worked on localhost. Asked and got explicit approval to: (a) widen the extension's activation scope to the deployed Vercel domain (a privacy/permission-scope change, confirmed with the user first per the mandatory material-question rule), and (b) add a lightweight first-open hint.
+
+#### Changed
+
+- `apps/extension/src/allowed-origins.ts` (new): single source of truth for the extension's activation scope, now `["http://localhost/*", "http://127.0.0.1/*", "https://web-seven-pied-41.vercel.app/*"]` - deliberately the exact stable alias, not a `*.vercel.app` wildcard, since that would match arbitrary third-party sites on the same public multi-tenant domain suffix. Imported into `wxt.config.ts` (`web_accessible_resources` matches), `entrypoints/shopping.content.tsx`, and `entrypoints/lemonade-bridge.content.ts` (both previously had the same array duplicated three times, a real risk of the lists silently drifting apart). The handoff URL itself needed no change - `shopping-scout.tsx` already builds it from `location.origin` dynamically, not a hardcoded host.
+- `apps/web/src/components/shell/onboarding-hint.tsx` (new): a single dismissible banner below the Top Bar - "New here? Tap "I'm tempted" before buying something, or tap a building in town to see what's happening there." with a "Got it" button. Dismissal is persisted in `localStorage` (`lemonade.onboarding-dismissed`, independent of app/demo state, so Reset Demo does not resurface it). Rendered as a single JS string expression rather than mixed JSX text/`<strong>` children - an earlier attempt with inline `<strong>` tags silently dropped the space at certain line-wrap boundaries in the compiled output (confirmed via `innerHTML`, not just visual inspection), so the plain-string form was kept as the reliable fix.
+- `README.md`: added a "Live demo" link at the top, updated the extension-loading/privacy sections to reflect the third allowed origin and that the deployed demo doesn't need a local server for the Scout half either.
+
+#### Verification
+
+```text
+corepack pnpm typecheck        -> PASS (4 packages)
+corepack pnpm lint             -> PASS
+corepack pnpm test              -> PASS (141/141)
+corepack pnpm format:check     -> PASS
+corepack pnpm --filter @lemonade/web build       -> PASS
+corepack pnpm --filter @lemonade/extension zip   -> PASS (1.48 MB)
+corepack pnpm test:e2e         -> PASS (18/18 Chromium, up from 17)
+```
+
+- Rebuilt the extension and inspected `manifest.json` directly to confirm all three `matches`/`web_accessible_resources` entries include the Vercel domain.
+- Loaded the rebuilt extension in a real (non-Playwright-managed) Chromium profile via `chromium.launchPersistentContext` against the live production URL and drove the full flow: Scout appears on `/demo-store` -> Pause -> a new tab opens at `https://web-seven-pied-41.vercel.app/?handoff=...` -> "Scout landed. Your decision is Cooling." -> Cooling (1) with "Cloudstep Runner Sneakers" listed. Screenshotted both steps.
+- Verified the onboarding text renders with correct spacing via `innerText()`/`innerHTML()` inspection, not just a screenshot.
+
+#### Risks and follow-up
+
+- The Vercel alias is stable across redeploys (confirmed earlier in CHG-20260712-023), but if the project is ever renamed or the alias changes, `allowed-origins.ts` must be updated and the extension rebuilt/reloaded, or Scout will silently stop activating on the deployed page.
+- The web app changed (`onboarding-hint.tsx`, `app-shell.tsx`), so it needs a fresh Vercel deploy for the hint to appear live; the extension change needs a rebuild plus the user reloading the unpacked extension in `chrome://extensions`, since Chrome does not hot-reload unpacked extensions.
+
 ## Release/Submission Entries
 
 When a deployment or submission artifact is created, add entries for:

@@ -1,3 +1,4 @@
+import { ALLOWED_MATCHES } from "../src/allowed-origins";
 import type { BridgeRequest, BridgeResponse } from "../src/bridge/messages";
 
 type PageRequest = {
@@ -10,7 +11,7 @@ type PageRequest = {
 };
 
 export default defineContentScript({
-  matches: ["http://localhost/*", "http://127.0.0.1/*"],
+  matches: ALLOWED_MATCHES,
   main() {
     const listener = async (event: MessageEvent<PageRequest>) => {
       if (event.source !== window || event.data?.source !== "lemonade-page")

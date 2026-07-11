@@ -2,6 +2,8 @@
 
 > Not affiliated with Lemonade Insurance (Lemonade, Inc., lemonade.com). "Lemonade" is a hackathon project name; this repository, its GitHub page, its demo website, and its demo video are all subtitled **Mindful Spending** to keep that distinct.
 
+**Live demo:** [web-seven-pied-41.vercel.app](https://web-seven-pied-41.vercel.app) — Lemonade Lane works there directly. The Browser Scout extension also activates on that domain's `/demo-store` page once loaded locally (see [Loading the extension](#loading-the-extension)); no local web server is required to see either half of the product.
+
 ## Problem
 
 Most "don't overspend" tools intervene after the fact — a budget dashboard, a bank alert, a spreadsheet nobody opens. By the time they say anything, the purchase already happened. The moment that actually matters is earlier: the instant someone is about to buy something they may already own an equivalent of.
@@ -12,7 +14,7 @@ Lemonade is a pre-purchase reuse companion. It catches high-confidence shopping 
 
 The product has two connected surfaces:
 
-- **Lemonade Browser Scout** — a WXT browser extension that detects high-confidence shopping intent on a controlled demo storefront (JSON-LD/Open Graph product data) and offers Pause / Continue anyway / Snooze / Hide. It never sees payment, address, account, or purchase-history data, and only ever runs on the controlled demo page (`http://localhost` / `http://127.0.0.1`) — it is not a general-purpose retailer extension.
+- **Lemonade Browser Scout** — a WXT browser extension that detects high-confidence shopping intent on a controlled demo storefront (JSON-LD/Open Graph product data) and offers Pause / Continue anyway / Snooze / Hide. It never sees payment, address, account, or purchase-history data, and only ever runs on the controlled demo page (`http://localhost`, `http://127.0.0.1`, or the deployed demo domain above) — it is not a general-purpose retailer extension.
 - **Lemonade Lane** — the town dashboard where a paused decision continues: 24-hour Cooling, an honest Ready review (Buy / already-own reuse / repair / real-need / extend), same-job matching against what the person already owns, and a persistent town (Workshop, Picnic Green, Little Station, Home Nook, Browser Gate) that visualises reuse/repair missions as resident activity.
 
 No AI decides necessity, outcome, same-job matching, or eligibility — those are deterministic domain rules, unit-tested in `packages/domain` and `packages/game-engine`. The full business loop works entirely offline after the page loads (no backend, no external API).
@@ -71,11 +73,11 @@ corepack pnpm build          # builds every package, including the extension
 
 ## Loading the extension
 
-1. `corepack pnpm --filter @lemonade/extension build` (outputs to `apps/extension/.output/chrome-mv3`).
+1. `corepack pnpm --filter @lemonade/extension build` (outputs to `apps/extension/.output/chrome-mv3`), or download and unzip the pre-built artifact from `apps/extension/.output/lemonadeextension-0.0.0-chrome.zip` after running `corepack pnpm --filter @lemonade/extension zip`.
 2. In Chrome, open `chrome://extensions`, enable Developer mode, click **Load unpacked**, and select `apps/extension/.output/chrome-mv3`.
-3. With the web app running locally (`corepack pnpm dev:web`), open `http://localhost:3000/demo-store` and click "Add Cloudstep Runner Sneakers to cart" to trigger the Scout.
+3. Open the demo storefront and click "Add Cloudstep Runner Sneakers to cart" to trigger the Scout - either the deployed one (`https://web-seven-pied-41.vercel.app/demo-store`, no local server needed) or, with the web app running locally (`corepack pnpm dev:web`), `http://localhost:3000/demo-store`.
 
-The extension only requests the `storage` permission and only runs on `http://localhost/*` and `http://127.0.0.1/*` — it cannot activate on any real website.
+The extension only requests the `storage` permission and only runs on the three demo origins listed in `apps/extension/src/allowed-origins.ts` (`http://localhost/*`, `http://127.0.0.1/*`, and the deployed demo domain) — it cannot activate on any real website.
 
 ## Seed / demo-data disclaimer
 
@@ -83,7 +85,7 @@ The persona ("Alex"), goal ("Japan trip fund"), owned items, and the one seeded 
 
 ## Privacy limits
 
-- The extension requests only the `storage` permission — no `tabs`, no `activeTab`, no host permissions beyond the two localhost origins it is scoped to.
+- The extension requests only the `storage` permission — no `tabs`, no `activeTab`, no host permissions beyond the three demo origins it is scoped to.
 - Product detection reads only public on-page structured data (JSON-LD / Open Graph); it never reads payment fields, addresses, accounts, or purchase history.
 - Pause / Continue anyway / Snooze / Hide are always available and always tab-local until an explicit handoff.
 - A paused decision is handed off to the web app at most once (idempotent, command-ID deduped) and is acknowledged so it cannot be replayed.
