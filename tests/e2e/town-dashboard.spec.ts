@@ -196,6 +196,93 @@ test("Ready repair unlocks Workshop, records mission, allocation, and history", 
   await expect(decisions.getByText("skipped", { exact: true })).toBeVisible();
 });
 
+test("Assigning Mender and Host confirms the town plan and activates Workshop", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Review now" }).click();
+  const review = page.getByRole("complementary", { name: "Ready review" });
+  await review.getByRole("button", { name: "I repaired it" }).click();
+  await expect(
+    review.getByText(/Workshop activity is now available/),
+  ).toBeVisible();
+  await review.getByRole("button", { name: "Today" }).click();
+
+  await expect(
+    page.getByRole("button", { name: /Workshop — Available/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Picnic Green — Available/ }),
+  ).toBeVisible();
+
+  const today = page.getByRole("complementary", { name: "Today" });
+  await today.getByRole("button", { name: /Mender/ }).click();
+  await expect(
+    page.getByRole("button", { name: /Workshop.*tap to assign/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Picnic Green.*tap to assign/ }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: /Workshop.*tap to assign/ }).click();
+  await expect(
+    today.getByRole("button", { name: /Mender.*Previewed — Workshop/ }),
+  ).toBeVisible();
+
+  await today.getByRole("button", { name: /Host/ }).click();
+  await page
+    .getByRole("button", { name: /Picnic Green.*tap to assign/ })
+    .click();
+  await expect(
+    today.getByRole("button", { name: /Host.*Previewed — Picnic Green/ }),
+  ).toBeVisible();
+
+  await today.getByRole("button", { name: "Confirm plan" }).click();
+  await expect(
+    page.getByRole("button", { name: /Workshop — Active/ }),
+  ).toBeVisible();
+  await expect(
+    today.getByRole("button", { name: /Mender.*Active — Workshop/ }),
+  ).toBeVisible();
+  await expect(
+    today.getByRole("button", { name: /Host.*Active — Picnic Green/ }),
+  ).toBeVisible();
+
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: /Workshop — Active/ }),
+  ).toBeVisible();
+});
+
+test("Cancelling a previewed assignment frees the location before confirming", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Review now" }).click();
+  const review = page.getByRole("complementary", { name: "Ready review" });
+  await review.getByRole("button", { name: "I repaired it" }).click();
+  await review.getByRole("button", { name: "Today" }).click();
+
+  const today = page.getByRole("complementary", { name: "Today" });
+  await today.getByRole("button", { name: /Mender/ }).click();
+  await page.getByRole("button", { name: /Workshop.*tap to assign/ }).click();
+  await expect(
+    today.getByRole("button", { name: /Mender.*Previewed — Workshop/ }),
+  ).toBeVisible();
+
+  await today.getByRole("button", { name: "Cancel" }).click();
+  await expect(
+    today.getByRole("button", { name: /Mender.*Unassigned/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Workshop — Available/ }),
+  ).toBeVisible();
+  await expect(
+    today.getByRole("button", { name: "Confirm plan" }),
+  ).toBeHidden();
+});
+
 test("My Stuff Quick Add and invalid import fallback remain usable", async ({
   page,
 }) => {

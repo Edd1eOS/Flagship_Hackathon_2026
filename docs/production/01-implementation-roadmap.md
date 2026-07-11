@@ -659,6 +659,10 @@ Replace placeholders with coherent approved assets and effects without moving bu
 
 ## Stage 14 - Verification, Accessibility, Performance, And Hardening
 
+**Status:** In progress, started 2026-07-11 23:10 CST.
+
+**Evidence so far:** the roadmap's required "project eligibility -> two resident assignments -> Workshop active" Playwright path now exists and passes, backed by an interactive resident-assignment UI in the Command Deck and World Stage (select resident, see eligible locations highlighted, preview/cancel/confirm using the existing `PREVIEW_ASSIGNMENT`/`CANCEL_ASSIGNMENT`/`CONFIRM_TOWN_PLAN` commands). Full matrix passed: `typecheck` (4 packages), `lint`, `test` (141/141), `format:check`, web build, extension build (1.63 MB, unchanged), `test:e2e` (14/14 Chromium). See CHG-20260711-020. Remaining: ARIA snapshots, touch-target/keyboard audit, console/network inspection, anonymous clean-profile deployment check, image profiling, dead-code removal, mandatory code-style review.
+
 ### Objective
 
 Turn the vertical slice into a reliable submission.

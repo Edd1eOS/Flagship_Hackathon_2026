@@ -1006,6 +1006,63 @@ Completed this iteration:
 - `docs/production/01-implementation-roadmap.md`: Stage 13 marked completed with evidence.
 - `docs/production/06-agent-handoff.md`: resume point advanced to Stage 14, asset/test inventory refreshed.
 
+### CHG-20260711-019 - First Git commit and push (Stages 1-13)
+
+- Timestamp: 2026-07-11 22:55 CST
+- Author/agent: Claude implementation agent
+- Stage: n/a (repository/deployment discipline)
+- Change type: git
+- Status: completed
+- Request/source: explicit user instruction to push a version before starting Stage 14.
+
+#### Changed
+
+- `git ls-remote` reconfirmed the remote was still empty (zero refs) immediately before committing.
+- Reviewed the full `git add -A --dry-run` file list for secrets; none found (`.env` files remain ignored, only `.env.example` is tracked).
+- Created root commit `d73cc176af9eb580401ab616e1ad5a90efd63d36` (147 files, all of Stages 1-13) and pushed to `origin/main` at `https://github.com/Edd1eOS/Flagship_Hackathon_2026.git`.
+
+#### Verification
+
+- `git status --short --branch` after push: clean, `main...origin/main` with no ahead/behind.
+
+#### Risks and follow-up
+
+- This is the only commit so far; all subsequent stage work must be committed explicitly when the user requests it, following the same fresh-remote-check discipline.
+
+### CHG-20260711-020 - Stage 14 slice 1: resident-to-project assignment UI and second push
+
+- Timestamp: 2026-07-11 23:10 CST
+- Author/agent: Claude implementation agent
+- Stage: 14 (verification, accessibility, performance, hardening)
+- Change type: feature + git
+- Status: completed
+- Request/source: found already implemented but uncommitted at session start (undocumented, like the Stage 13 interruption); verified, documented, and pushed at explicit user request ("push a version first, then plan and execute Stage 14").
+
+#### Changed
+
+- `apps/web/src/components/shell/app-shell.tsx`: resident selection state, `eligibleLocationIds` derivation (assignable, unlocked, either `available` or already held by the selected resident), `previewedAssignments` derivation, and handlers dispatching the existing `PREVIEW_ASSIGNMENT`/`CANCEL_ASSIGNMENT`/`CONFIRM_TOWN_PLAN` commands (no new domain/game-engine surface - these commands and `town-engine.ts` already existed from Stage 8).
+- `apps/web/src/components/shell/command-deck.tsx`: replaced the read-only `residents` list with an interactive `residentRows` list (select resident, cancel a preview, confirm the plan), a `ResidentRow` view type owned by the component instead of leaking `TownResidentView` from `@lemonade/game-engine`.
+- `apps/web/src/components/world/world-stage.tsx` and `location-hotspot.tsx`: added `eligible` highlighting (leaf-green border/fill) and an accessible `"tap to assign"` label suffix on hotspots the selected resident can be assigned to.
+- `tests/e2e/town-dashboard.spec.ts`: added the roadmap's required "project eligibility -> two resident assignments -> Workshop active" Playwright path (Mender to Workshop, Host to Picnic Green, confirm, reload-persists) and a cancel-before-confirm path.
+
+#### Verification
+
+```text
+corepack pnpm typecheck        -> PASS (4 packages)
+corepack pnpm lint             -> PASS
+corepack pnpm test              -> PASS (141/141)
+corepack pnpm format:check     -> PASS (after `prettier --write` on app-shell.tsx)
+corepack pnpm --filter @lemonade/web build       -> PASS
+corepack pnpm --filter @lemonade/extension build -> PASS (1.63 MB total, unchanged)
+corepack pnpm test:e2e         -> PASS (14/14 Chromium)
+```
+
+- `git ls-remote origin main` immediately before committing: still exactly `d73cc176af9eb580401ab616e1ad5a90efd63d36`, matching local `origin/main`, so no remote-side change to reconcile.
+
+#### Risks and follow-up
+
+- Remaining Stage 14 roadmap items are still open: ARIA snapshots, explicit touch-target/keyboard audit, console/network error inspection, anonymous clean-profile deployment check, image size/preload profiling, dead-code/debug-log removal, and the mandatory `04-iteration-workflow.md` code-style review. Tracked as the next iterations.
+
 ## Release/Submission Entries
 
 When a deployment or submission artifact is created, add entries for:

@@ -18,7 +18,11 @@ import { CaptureFlow } from "../business/capture-flow";
 import { ReadyReview } from "../business/ready-review";
 import { DecisionsPanel } from "../business/decisions-panel";
 import { MyStuffPanel } from "../business/my-stuff-panel";
-import { CommandDeck, type SelectedLocationContext } from "./command-deck";
+import {
+  CommandDeck,
+  type ResidentRow,
+  type SelectedLocationContext,
+} from "./command-deck";
 import { DecisionDock } from "./decision-dock";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { MobileBottomSheet } from "./mobile-bottom-sheet";
@@ -51,6 +55,11 @@ export function AppShell() {
     Boolean(new URLSearchParams(window.location.search).get("import")),
   );
   const [motionOverride, setMotionOverride] = useMotionPreference();
+  const [selectedResidentId, setSelectedResidentId] = useState<string | null>(
+    null,
+  );
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
+  const [assignmentWorking, setAssignmentWorking] = useState(false);
 
   const townViewModel = useMemo(
     () => (appState ? selectTownViewModel(appState) : null),
@@ -92,6 +101,121 @@ export function AppShell() {
     };
   }, [selectedLocationId, townViewModel]);
 
+  const residentRows: ResidentRow[] = useMemo(() => {
+    if (!townViewModel) return [];
+    return townViewModel.residents
+      .filter((resident) => resident.role !== "scout")
+      .map((resident) => {
+        const location = resident.projectId
+          ? townViewModel.locations.find(
+              (candidate) => candidate.id === resident.projectId,
+            )
+          : null;
+        return {
+          id: resident.id,
+          role: resident.role,
+          locationLabel: location ? LOCATION_HOTSPOTS[location.id].label : null,
+          isPreview: location?.state === "assigned",
+          isActive:
+            location?.state === "active" || location?.state === "lived_in",
+        };
+      });
+  }, [townViewModel]);
+
+  const eligibleLocationIds: readonly LocationId[] = useMemo(() => {
+    if (!selectedResidentId || !townViewModel) return [];
+    return townViewModel.locations
+      .filter((location) => ASSIGNABLE_PROJECT_LOCATIONS.includes(location.id))
+      .filter((location) => {
+        if (location.state === "available") return true;
+        if (location.state === "assigned") {
+          const holder = townViewModel.residents.find(
+            (resident) => resident.projectId === location.id,
+          );
+          return holder?.id === selectedResidentId;
+        }
+        return false;
+      })
+      .map((location) => location.id);
+  }, [selectedResidentId, townViewModel]);
+
+  const previewedAssignments = useMemo(() => {
+    if (!townViewModel) return [];
+    return townViewModel.residents
+      .filter((resident) => resident.role !== "scout" && resident.projectId)
+      .filter(
+        (resident) =>
+          townViewModel.locations.find(
+            (candidate) => candidate.id === resident.projectId,
+          )?.state === "assigned",
+      )
+      .map((resident) => ({
+        residentId: resident.id,
+        locationId: resident.projectId as LocationId,
+      }));
+  }, [townViewModel]);
+
+  function handleSelectResident(residentId: string) {
+    setAssignmentError(null);
+    setSelectedLocationId(null);
+    setSelectedResidentId((current) =>
+      current === residentId ? null : residentId,
+    );
+  }
+
+  async function handleCancelAssignment(residentId: string) {
+    setAssignmentWorking(true);
+    setAssignmentError(null);
+    const result = await dispatch({
+      type: "CANCEL_ASSIGNMENT",
+      commandId: crypto.randomUUID(),
+      residentId,
+    });
+    setAssignmentWorking(false);
+    if (!result.ok) {
+      setAssignmentError(result.error.message);
+      return;
+    }
+    setSelectedResidentId((current) =>
+      current === residentId ? null : current,
+    );
+  }
+
+  async function handleConfirmPlan() {
+    if (previewedAssignments.length === 0) return;
+    setAssignmentWorking(true);
+    setAssignmentError(null);
+    const result = await dispatch({
+      type: "CONFIRM_TOWN_PLAN",
+      commandId: crypto.randomUUID(),
+      assignments: previewedAssignments,
+    });
+    setAssignmentWorking(false);
+    if (!result.ok) setAssignmentError(result.error.message);
+  }
+
+  async function handleSelectLocation(locationId: LocationId) {
+    if (selectedResidentId) {
+      if (!eligibleLocationIds.includes(locationId)) return;
+      setAssignmentWorking(true);
+      setAssignmentError(null);
+      const result = await dispatch({
+        type: "PREVIEW_ASSIGNMENT",
+        commandId: crypto.randomUUID(),
+        residentId: selectedResidentId,
+        locationId,
+      });
+      setAssignmentWorking(false);
+      if (!result.ok) {
+        setAssignmentError(result.error.message);
+        return;
+      }
+      setSelectedResidentId(null);
+      return;
+    }
+    setSelectedLocationId(locationId);
+  }
+
   if (status === "loading" || !appState || !townViewModel) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-paper)]">
@@ -123,7 +247,8 @@ export function AppShell() {
     <WorldStage
       locations={townViewModel.locations}
       selectedLocationId={selectedLocationId}
-      onSelectLocation={setSelectedLocationId}
+      eligibleLocationIds={eligibleLocationIds}
+      onSelectLocation={(locationId) => void handleSelectLocation(locationId)}
     />
   );
 
@@ -152,20 +277,31 @@ export function AppShell() {
     <CommandDeck
       readyDecisions={readyDecisions}
       openMissions={openMissions}
-      residents={townViewModel.residents}
+      residentRows={residentRows}
+      selectedResidentId={selectedResidentId}
+      canConfirmPlan={previewedAssignments.length > 0}
+      assignmentWorking={assignmentWorking}
+      assignmentError={assignmentError}
       patrolLabel={PATROL_LABEL}
       selectedLocation={selectedLocation}
       onClearSelection={() => setSelectedLocationId(null)}
       onStartCapture={() => {
         setSelectedLocationId(null);
+        setSelectedResidentId(null);
         setReviewDecisionId(null);
         setCaptureOpen(true);
       }}
       onReviewDecision={(decisionId) => {
         setSelectedLocationId(null);
+        setSelectedResidentId(null);
         setCaptureOpen(false);
         setReviewDecisionId(decisionId);
       }}
+      onSelectResident={handleSelectResident}
+      onCancelAssignment={(residentId) =>
+        void handleCancelAssignment(residentId)
+      }
+      onConfirmPlan={() => void handleConfirmPlan()}
     />
   );
 

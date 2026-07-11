@@ -41,6 +41,7 @@ function worldAssetForLocation(
 export type WorldStageProps = {
   locations: TownLocation[];
   selectedLocationId: LocationId | null;
+  eligibleLocationIds: readonly LocationId[];
   onSelectLocation: (locationId: LocationId) => void;
 };
 
@@ -49,6 +50,7 @@ export type WorldStageProps = {
 export function WorldStage({
   locations,
   selectedLocationId,
+  eligibleLocationIds,
   onSelectLocation,
 }: WorldStageProps) {
   const base = ASSET_MANIFEST["world.town.base"];
@@ -89,6 +91,7 @@ export function WorldStage({
           locationId={location.id}
           state={location.state}
           selected={selectedLocationId === location.id}
+          eligible={eligibleLocationIds.includes(location.id)}
           onSelect={onSelectLocation}
         />
       ))}
