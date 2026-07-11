@@ -1122,6 +1122,37 @@ corepack pnpm test:e2e         -> PASS (16/16 Chromium, up from 14)
 
 - Stage 15 tasks 3 (Vercel deploy), 6-7 (screen captures/demo video), 9 (second-device/clean-profile playback check), 10 (submission checklist), and 11 (code freeze) are still open and need the user's explicit go-ahead - deploying and recording are hard to reverse or require the user's own voice/screen.
 
+### CHG-20260712-023 - Deploy apps/web to Vercel production
+
+- Timestamp: 2026-07-12 00:15 CST
+- Author/agent: Claude implementation agent
+- Stage: 15 (deployment, repository, video, submission)
+- Change type: deploy
+- Status: completed
+- Request/source: explicit user instruction ("部署吧") after confirming GitHub was up to date.
+
+#### Changed
+
+- User authenticated the Vercel CLI themselves via `vercel login` (device flow), per their choice when asked how to authorise.
+- Linked the repo to a new Vercel project (`xinxiang-lei/web`). First attempt linked from inside `apps/web`, which only uploaded that subdirectory and failed (`npm install` couldn't see the pnpm workspace or `@lemonade/domain`/`@lemonade/game-engine`). Re-linked from the repository root instead, then set the project's `rootDirectory` to `apps/web` via the Vercel REST API (`PATCH /v9/projects/{id}`) using the CLI's own stored session token, so a normal `vercel --prod` deploy from the repo root uploads the full monorepo and Vercel's own pnpm-workspace-aware install/build runs correctly. A short-lived root `vercel.json` with manual `buildCommand`/`installCommand`/`outputDirectory` was tried first, found unnecessary once `rootDirectory` was set correctly, and removed - Vercel's zero-config Next.js + monorepo detection handles it.
+- Production deploy succeeded: `corepack pnpm install --frozen-lockfile` (all 5 workspace projects) then `next build` inside `apps/web`, same output as the local build (`/`, `/_not-found`, `/demo-store`, `/icon.png`, all static).
+- Local artefacts: `.vercel/` at the repo root and a new `apps/web/.gitignore` (containing only `.vercel`) were created by the CLI; both are gitignored, no secrets committed.
+
+#### Verification
+
+- `curl -s -o /dev/null -w "%{http_code}"` against the production alias: `/` -> 200, `/icon.png` -> 200, `/demo-store` -> 200.
+- `curl` on `/` contains the string "Lemonade" (page actually renders, not an error page).
+
+#### Result
+
+- Production URL: `https://web-seven-pied-41.vercel.app` (stable alias; the per-deploy URL `https://web-cx2sc7e0y-xinxiang-lei.vercel.app` also resolves to the same build and will change on every future deploy).
+
+#### Risks and follow-up
+
+- The app is entirely client-side (localStorage-backed, no backend), so this static/prerendered deployment is expected to behave identically to the local dev server for the demo path; no server-side environment variables are needed.
+- The browser extension still must be loaded from a local unpacked build or the zip artifact (Chrome Web Store publishing is out of scope for this hackathon submission) - the extension's content-script match scope (`http://localhost/*`, `http://127.0.0.1/*`) does not include the Vercel domain, so the Scout will only activate against the local `/demo-store` page, not the deployed one. This is expected and should be called out in the demo video script so the video doesn't imply the deployed URL is where the extension activates.
+- Stage 15 tasks 6-7 (video), 9 (clean-device playback check), 10 (submission checklist), 11 (code freeze) are still open.
+
 ## Release/Submission Entries
 
 When a deployment or submission artifact is created, add entries for:
