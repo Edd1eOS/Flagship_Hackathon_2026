@@ -62,7 +62,7 @@ export function TopBar({
           aria-pressed={soundEnabled}
           aria-label={soundEnabled ? "Mute sound" : "Enable sound"}
           onClick={() => setSoundEnabled((value) => !value)}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--color-ink)] hover:bg-[var(--color-cream)]"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-[var(--color-ink)] hover:bg-[var(--color-cream)]"
         >
           {soundEnabled ? (
             <Volume2 size={18} aria-hidden="true" />
@@ -78,7 +78,7 @@ export function TopBar({
             aria-expanded={settingsOpen}
             aria-label="Settings"
             onClick={() => setSettingsOpen((value) => !value)}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--color-ink)] hover:bg-[var(--color-cream)]"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-[var(--color-ink)] hover:bg-[var(--color-cream)]"
           >
             <Settings size={18} aria-hidden="true" />
           </button>

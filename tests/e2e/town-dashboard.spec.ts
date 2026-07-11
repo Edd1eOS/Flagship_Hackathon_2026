@@ -1,11 +1,22 @@
 import { expect, test, type Page } from "@playwright/test";
 
-async function expectStableDashboard(page: Page) {
-  const consoleErrors: string[] = [];
+// Every test in this file is asserted to raise zero uncaught console errors
+// or page exceptions, regardless of which flow it exercises.
+let consoleErrors: string[] = [];
+
+test.beforeEach(async ({ page }) => {
+  consoleErrors = [];
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
   });
+  page.on("pageerror", (error) => consoleErrors.push(String(error)));
+});
 
+test.afterEach(() => {
+  expect(consoleErrors, "no uncaught console errors or exceptions").toEqual([]);
+});
+
+async function expectStableDashboard(page: Page) {
   await page.goto("/");
   await expect(page.getByText("Lemonade", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
@@ -20,11 +31,37 @@ async function expectStableDashboard(page: Page) {
       document.documentElement.clientWidth,
   );
   expect(overflow).toBe(false);
-  expect(
-    consoleErrors,
-    "dashboard should hydrate without console errors",
-  ).toEqual([]);
 }
+
+test("first open shows the canonical seed with no action taken", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expectStableDashboard(page);
+
+  await expect(page.getByText("Japan trip fund")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Ready \(1\)/ })).toBeVisible();
+
+  await expect(
+    page.getByRole("button", { name: /Home Nook — Lived in/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Browser Gate — Available/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Workshop — Locked/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Picnic Green — Locked/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Little Station — Locked/ }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "My Stuff" }).first().click();
+  const stuff = page.getByRole("complementary", { name: "My Stuff" });
+  await expect(stuff.getByRole("listitem")).toHaveCount(10);
+});
 
 test("desktop town dashboard is stable and keyboard reachable", async ({
   page,
@@ -32,10 +69,44 @@ test("desktop town dashboard is stable and keyboard reachable", async ({
   await page.setViewportSize({ width: 1440, height: 900 });
   await expectStableDashboard(page);
 
+  await expect(page.getByRole("complementary", { name: "Today" }))
+    .toMatchAriaSnapshot(`
+    - complementary "Today":
+      - heading "Today" [level=2]
+      - region "Ready now":
+        - heading "Ready now" [level=3]
+        - paragraph: Retro court sneakers
+        - button "Review now"
+      - region "Active mission":
+        - heading "Active mission" [level=3]
+        - paragraph: No active mission yet.
+      - region "Town plan":
+        - heading "Town plan" [level=3]
+        - list:
+          - listitem:
+            - button "Mender Unassigned"
+          - listitem:
+            - button "Host Unassigned"
+      - region "Patrol":
+        - heading "Patrol" [level=3]
+        - paragraph: Extension not connected
+      - button "I'm tempted"
+  `);
+
   await page.getByRole("button", { name: /Workshop/ }).focus();
   await expect(page.getByRole("button", { name: /Workshop/ })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Workshop" })).toBeVisible();
+
+  await expect(page.getByRole("complementary", { name: "Location details" }))
+    .toMatchAriaSnapshot(`
+    - complementary "Location details":
+      - button "Today"
+      - heading "Workshop" [level=2]
+      - paragraph: Repair and reuse what you own
+      - term: State
+      - definition: Locked
+  `);
 
   await expect(page).toHaveScreenshot("town-dashboard-desktop.png", {
     animations: "disabled",
@@ -87,6 +158,35 @@ test("manual capture creates persistent Cooling beside seeded Ready", async ({
   const capture = page.getByRole("complementary", {
     name: "Capture a purchase decision",
   });
+  await expect(capture).toMatchAriaSnapshot(`
+    - complementary "Capture a purchase decision":
+      - button "Today"
+      - heading "What are you tempted by?" [level=2]
+      - button "Manual" [pressed]
+      - button "Photo"
+      - button "Scout" [disabled]
+      - text: Item name
+      - textbox "Item name": Everyday walking sneakers
+      - text: Price (AUD)
+      - textbox "Price (AUD)": "149.95"
+      - text: Category
+      - textbox "Category": footwear
+      - text: What job should it do?
+      - textbox "What job should it do?": daily walking
+      - group "How does this feel?":
+        - text: How does this feel?
+        - radio "need"
+        - text: need
+        - radio "replacement"
+        - text: replacement
+        - radio "want" [checked]
+        - text: want
+      - paragraph: Same-job check
+      - paragraph: Trail running shoes
+      - paragraph: "Already covers the same job: daily walking"
+      - paragraph: +2 more possible matches
+      - button "Pause for 24 hours"
+  `);
   await capture.getByRole("button", { name: "Photo" }).click();
   await capture.getByLabel("Product photo").setInputFiles({
     name: "walking-shoes.png",
@@ -116,6 +216,55 @@ test("manual capture creates persistent Cooling beside seeded Ready", async ({
     page.getByRole("button", { name: /Cooling \(1\)/ }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: /Ready \(1\)/ })).toBeVisible();
+});
+
+test("business loop keeps working with the network fully offline after load", async ({
+  page,
+  context,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  const failedRequests: string[] = [];
+  page.on("requestfailed", (request) => failedRequests.push(request.url()));
+
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: /Ready \(1\)/ })).toBeVisible();
+  await page.waitForLoadState("networkidle");
+
+  await context.setOffline(true);
+
+  await page.getByRole("button", { name: "I'm tempted" }).click();
+  const capture = page.getByRole("complementary", {
+    name: "Capture a purchase decision",
+  });
+  await capture.getByRole("button", { name: "Photo" }).click();
+  await capture.getByLabel("Product photo").setInputFiles({
+    name: "walking-shoes.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("demo-photo"),
+  });
+  await expect(capture.getByText("walking-shoes.png")).toBeVisible();
+  await page.getByRole("button", { name: "Pause for 24 hours" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Give it 24 hours" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Back to town" }).click();
+  await expect(
+    page.getByRole("button", { name: /Cooling \(1\)/ }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Review now" }).click();
+  const review = page.getByRole("complementary", { name: "Ready review" });
+  await review.getByRole("button", { name: "Buy — neutral" }).click();
+  await review.getByRole("button", { name: "Today" }).click();
+  await expect(page.getByRole("button", { name: /Ready \(0\)/ })).toBeVisible();
+
+  expect(
+    failedRequests,
+    "no network request should even be attempted once the app has loaded",
+  ).toEqual([]);
+
+  await context.setOffline(false);
 });
 
 for (const scenario of [
@@ -170,6 +319,24 @@ test("Ready repair unlocks Workshop, records mission, allocation, and history", 
   await expect(
     review.getByText("White canvas sneakers", { exact: true }),
   ).toBeVisible();
+  await expect(review).toMatchAriaSnapshot(`
+    - complementary "Ready review":
+      - button "Today"
+      - paragraph: Ready review
+      - heading "Retro court sneakers" [level=2]
+      - term: Original job
+      - definition: daily walking
+      - term: Original motive
+      - definition: trend
+      - paragraph: Best same-job match
+      - paragraph: White canvas sneakers
+      - paragraph: "Already covers: daily walking"
+      - button "What I own solved it"
+      - button "I repaired it"
+      - button "Buy — neutral"
+      - button "It is a real need"
+      - button "Wait another 24 hours"
+  `);
   await review.getByRole("button", { name: "I repaired it" }).click();
   await expect(
     review.getByText(/Workshop activity is now available/),

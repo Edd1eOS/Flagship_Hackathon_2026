@@ -1,8 +1,17 @@
 import path from "node:path";
 
-import { chromium, expect, test } from "@playwright/test";
+import { chromium, expect, test, type Page } from "@playwright/test";
 
 const extensionPath = path.resolve("apps/extension/.output/chrome-mv3");
+
+function trackConsoleErrors(page: Page): string[] {
+  const errors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  page.on("pageerror", (error) => errors.push(String(error)));
+  return errors;
+}
 
 test("high-confidence Add to Cart shows a neutral Scout intervention", async ({}, testInfo) => {
   const context = await chromium.launchPersistentContext(
@@ -17,6 +26,7 @@ test("high-confidence Add to Cart shows a neutral Scout intervention", async ({}
   );
   try {
     const page = await context.newPage();
+    const consoleErrors = trackConsoleErrors(page);
     await page.goto("http://127.0.0.1:3000/demo-store");
     await expect(
       page.getByRole("complementary", { name: "Lemonade Browser Scout" }),
@@ -38,6 +48,7 @@ test("high-confidence Add to Cart shows a neutral Scout intervention", async ({}
       page.getByRole("dialog", { name: "Pause before buying" }),
     ).toBeHidden();
     expect(await page.evaluate(() => localStorage.length)).toBe(0);
+    expect(consoleErrors, "no uncaught console errors").toEqual([]);
   } finally {
     await context.close();
   }
@@ -56,6 +67,7 @@ test("Pause is tab-local and Hide suppresses repeat prompts", async ({}, testInf
   );
   try {
     const page = await context.newPage();
+    const consoleErrors = trackConsoleErrors(page);
     await page.goto("http://127.0.0.1:3000/demo-store");
     await page
       .getByRole("button", { name: /Add Cloudstep Runner Sneakers to cart/ })
@@ -69,6 +81,7 @@ test("Pause is tab-local and Hide suppresses repeat prompts", async ({}, testInf
     await expect(
       page.getByRole("complementary", { name: "Lemonade Browser Scout" }),
     ).toBeHidden();
+    expect(consoleErrors, "no uncaught console errors").toEqual([]);
   } finally {
     await context.close();
   }
@@ -87,6 +100,7 @@ test("Snooze suppresses the Scout for the current site tab", async ({}, testInfo
   );
   try {
     const page = await context.newPage();
+    const consoleErrors = trackConsoleErrors(page);
     await page.goto("http://127.0.0.1:3000/demo-store");
     await page
       .getByRole("button", { name: /Add Cloudstep Runner Sneakers to cart/ })
@@ -98,6 +112,7 @@ test("Snooze suppresses the Scout for the current site tab", async ({}, testInfo
     await expect(
       page.getByRole("complementary", { name: "Lemonade Browser Scout" }),
     ).toBeHidden();
+    expect(consoleErrors, "no uncaught console errors").toEqual([]);
   } finally {
     await context.close();
   }
@@ -116,6 +131,7 @@ test("Pause hands off exactly once and survives Lemonade refresh", async ({}, te
   );
   try {
     const store = await context.newPage();
+    const storeConsoleErrors = trackConsoleErrors(store);
     await store.goto("http://127.0.0.1:3000/demo-store");
     await store
       .getByRole("button", { name: /Add Cloudstep Runner Sneakers to cart/ })
@@ -123,6 +139,7 @@ test("Pause hands off exactly once and survives Lemonade refresh", async ({}, te
     const lanePromise = context.waitForEvent("page");
     await store.getByRole("button", { name: "Pause" }).click();
     const lane = await lanePromise;
+    const laneConsoleErrors = trackConsoleErrors(lane);
     await lane.waitForURL(/\?handoff=/);
     await expect(
       lane.getByText("Scout landed. Your decision is Cooling."),
@@ -155,6 +172,8 @@ test("Pause hands off exactly once and survives Lemonade refresh", async ({}, te
       ).length;
     });
     expect(importedAfter).toBe(1);
+    expect(storeConsoleErrors, "no uncaught console errors").toEqual([]);
+    expect(laneConsoleErrors, "no uncaught console errors").toEqual([]);
   } finally {
     await context.close();
   }

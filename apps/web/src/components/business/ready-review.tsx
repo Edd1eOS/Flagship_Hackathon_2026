@@ -189,7 +189,7 @@ export function ReadyReview({
       <button
         type="button"
         onClick={onClose}
-        className="flex items-center gap-1.5 self-start text-sm font-semibold"
+        className="flex min-h-11 items-center gap-1.5 self-start text-sm font-semibold"
       >
         <ArrowLeft size={16} aria-hidden="true" /> Today
       </button>
@@ -244,7 +244,7 @@ export function ReadyReview({
             <button
               type="button"
               onClick={() => setShowAllocation(true)}
-              className="mt-3 text-sm font-bold underline"
+              className="mt-3 flex min-h-11 items-center text-sm font-bold underline"
             >
               Plan part of the skipped price
             </button>

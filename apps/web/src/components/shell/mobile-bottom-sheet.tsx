@@ -47,7 +47,7 @@ export function MobileBottomSheet({
               ? "Expand today panel fully"
               : "Collapse today panel"
         }
-        className="flex h-8 items-center justify-center gap-2 border-t border-[var(--color-line)] text-[var(--color-ink)]/50"
+        className="flex min-h-11 items-center justify-center gap-2 border-t border-[var(--color-line)] text-[var(--color-ink)]/50"
       >
         <span className="h-1 w-10 rounded-full bg-[var(--color-line)]" />
         <ChevronUp
