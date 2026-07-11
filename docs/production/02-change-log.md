@@ -1201,6 +1201,33 @@ corepack pnpm test:e2e         -> PASS (17/17 Chromium, up from 16)
 - This was found through the user directly testing the deployed URL, not through this agent's own review passes across 14+ prior "completed and verified" stage claims - the Stage 14 three-pass self-review's UX/accessibility pass asked "are hotspots/buttons at least approximately 44px" (a size question) but never asked "does hovering/clicking actually look and feel interactive," and no stage's exit criteria included clicking through every nav tab. Both gaps should be treated as standing lessons for any remaining verification.
 - Redeployed to Vercel after this fix; see the deployment follow-up entry.
 
+### CHG-20260712-025 - Replace the full-rect hotspot highlight with a compact badge
+
+- Timestamp: 2026-07-12 00:55 CST
+- Author/agent: Claude implementation agent
+- Stage: n/a (follow-up UX fix on CHG-20260712-024)
+- Change type: fix
+- Status: completed
+- Request/source: user tested the redeployed site and reported the location hotspot's selected/eligible highlight was still a jarring hard-edged rectangle sitting over the hand-drawn art, and asked for either a proper button-style highlight or an outline that follows the actual shape.
+
+#### Changed
+
+- `apps/web/src/components/world/location-hotspot.tsx`: a true silhouette/outline highlight (option 2) isn't feasible - the town art is one composite base image, not per-location cutouts with alpha edges to trace, and no image-generation tool is available to produce them. Implemented the button-style highlight (option 1) instead: the outer `<button>` (still the full percentage-rect click target, unchanged position/size for the 44px touch-target requirement) now carries no visible border or background at all. The border/background color feedback (leaf for eligible, lemon for selected, dashed for locked, subtle leaf on hover) moved onto the small label badge itself (`{name}` + `{state}` pill, already anchored near the bottom of each location), which now reads as an actual UI chip/tag instead of a box drawn over the illustration.
+
+#### Verification
+
+```text
+corepack pnpm typecheck        -> PASS (4 packages)
+corepack pnpm lint             -> PASS
+corepack pnpm test              -> PASS (141/141)
+corepack pnpm format:check     -> PASS
+corepack pnpm --filter @lemonade/web build -> PASS
+corepack pnpm test:e2e         -> PASS (17/17 Chromium)
+```
+
+- Manually screenshotted the idle and eligible states after the change and visually confirmed the badge reads as a compact tag, not a rectangle over the art. Desktop/mobile screenshot baselines regenerated and re-verified passing.
+- Redeployed to Vercel; see the deployment follow-up entry.
+
 ## Release/Submission Entries
 
 When a deployment or submission artifact is created, add entries for:
