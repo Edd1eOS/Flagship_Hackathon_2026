@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+verifyDepsBeforeRun: warn
+enableGlobalVirtualStore: false
+allowBuilds:
+  esbuild: true
+  sharp: true
+  spawn-sync: false
+  unrs-resolver: true

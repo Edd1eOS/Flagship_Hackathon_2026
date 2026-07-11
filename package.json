@@ -1,0 +1,26 @@
+{
+  "name": "lemonade",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.11.0",
+  "scripts": {
+    "build": "corepack pnpm -r --if-present build",
+    "dev:extension": "corepack pnpm --filter @lemonade/extension dev",
+    "dev:web": "corepack pnpm --filter @lemonade/web dev",
+    "format:check": "prettier --check \"**/*.{json,js,mjs,ts,tsx,css,yaml,yml}\"",
+    "lint": "corepack pnpm -r --if-present lint",
+    "test": "vitest run --passWithNoTests",
+    "test:e2e": "playwright test --pass-with-no-tests",
+    "typecheck": "corepack pnpm -r --if-present typecheck"
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=11"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "prettier": "3.9.5",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}
