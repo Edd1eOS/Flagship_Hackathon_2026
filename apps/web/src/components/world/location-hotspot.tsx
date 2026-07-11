@@ -39,14 +39,14 @@ export function LocationHotspot({
         width: `${hotspot.rect.width}%`,
         height: `${hotspot.rect.height}%`,
       }}
-      className={`absolute flex min-h-11 min-w-11 flex-col items-center justify-end gap-1 rounded-lg border-2 bg-transparent px-2 pb-2 text-center transition-colors ${
+      className={`absolute flex min-h-11 min-w-11 flex-col items-center justify-end gap-1 rounded-lg border-2 px-2 pb-2 text-center shadow-sm transition-all hover:shadow-md ${
         eligible
           ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/25"
           : selected
             ? "border-[var(--color-lemon)] bg-[var(--color-lemon)]/20"
             : state === "locked"
-              ? "border-dashed border-white/60 opacity-80"
-              : "border-transparent hover:border-[var(--color-leaf)]"
+              ? "border-dashed border-white/60 bg-black/5 opacity-80"
+              : "border-white/50 bg-black/5 hover:border-[var(--color-leaf)] hover:bg-[var(--color-leaf)]/15"
       }`}
     >
       <span className="rounded bg-[var(--color-paper)]/85 px-1 font-[family-name:var(--font-display)] text-sm text-[var(--color-ink)] sm:text-base">

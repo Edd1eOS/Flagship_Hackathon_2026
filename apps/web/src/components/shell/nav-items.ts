@@ -9,8 +9,6 @@ export type NavItem = {
   icon: ComponentType<{ size?: number; "aria-hidden"?: boolean | "true" }>;
 };
 
-// Only "town" renders real content in Stage 9; the rest are reserved for the
-// Stage 10 routed views the dependency map already names.
 export const NAV_ITEMS: readonly NavItem[] = [
   { id: "town", label: "Town", icon: Home },
   { id: "decisions", label: "Decisions", icon: ClipboardList },

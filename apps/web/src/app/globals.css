@@ -38,6 +38,23 @@ body {
 }
 
 /*
+ * Tailwind's preflight leaves button cursor at the browser default (an
+ * arrow, not a hand), so every button in the app - including the world
+ * hotspots that sit directly on illustrated art - reads as non-interactive
+ * to a mouse user. Restore the pointer cursor and a press-scale globally
+ * (zero-specificity :where() so any component's own transition-* utility
+ * still wins on shared longhands) instead of per-component so no button is
+ * missed.
+ */
+:where(button:not(:disabled)) {
+  cursor: pointer;
+}
+
+:where(button:not(:disabled)):active {
+  transform: scale(0.96);
+}
+
+/*
  * Reduced motion is resolved in JS (system preference + optional manual
  * override, see lib/use-motion-preference.ts) and written to
  * documentElement.dataset.motion. The plain @media block covers the brief

@@ -1153,6 +1153,54 @@ corepack pnpm test:e2e         -> PASS (16/16 Chromium, up from 14)
 - The browser extension still must be loaded from a local unpacked build or the zip artifact (Chrome Web Store publishing is out of scope for this hackathon submission) - the extension's content-script match scope (`http://localhost/*`, `http://127.0.0.1/*`) does not include the Vercel domain, so the Scout will only activate against the local `/demo-store` page, not the deployed one. This is expected and should be called out in the demo video script so the video doesn't imply the deployed URL is where the extension activates.
 - Stage 15 tasks 6-7 (video), 9 (clean-device playback check), 10 (submission checklist), 11 (code freeze) are still open.
 
+### CHG-20260712-024 - Fix missing Goal view and app-wide click affordance on the deployed site
+
+- Timestamp: 2026-07-12 00:35 CST
+- Author/agent: Claude implementation agent
+- Stage: n/a (correctness/UX fix found via real usage of the deployed URL, not a roadmap stage)
+- Change type: fix + feature
+- Status: completed
+- Request/source: user tested the newly deployed production URL and reported world hotspots feeling unclickable/static, scene-effect toasts popping abruptly, and a "This section opens later in the build." placeholder visible on a real nav tab - asked directly whether the product was actually unfinished.
+
+#### Root causes found
+
+1. **`NavId` "goal" was never implemented.** `app-shell.tsx` special-cased `activeNav === "goal"` to render only the literal placeholder string "This section opens later in the build." - a Stage-9-era stub that every later stage's "completed and verified" claim never actually clicked through, including this agent's own Stage 14 hardening pass. The `Goal`/`PlannedAllocation` domain data (target/starting/planned amounts, per-decision planned allocations) has existed since Stage 3 and was already summarised in the Top Bar, but no dedicated view ever consumed it.
+2. **No button in the app had a pointer cursor.** Tailwind v4's preflight leaves `<button>` at the browser's default arrow cursor (this was changed upstream from Tailwind's old default); only one label in `capture-flow.tsx` had ever added `cursor-pointer` explicitly. Combined with location hotspots having a fully transparent idle-state border/background (only `hover:border-leaf`, invisible until the mouse happens to already be over the exact percentage-rect), this made every clickable region in the app - especially the world hotspots sitting directly on illustrated art - read as flat, non-interactive images even though the click handlers worked.
+3. **No press/click feedback anywhere.** Only 3 uses of Tailwind's `active:` variant existed in the whole codebase.
+4. **`SceneDirector`'s toast popped in and out with `if (!effect) return null`** (a hard mount/unmount, no transition) plus a jarring `animate-[pulse_500ms_ease-in-out_2]` - it appeared and vanished instantly with a flash in between.
+5. **A genuine, pre-existing correctness gap surfaced while investigating (1)-(4) via a real offline test run**: `/art/*` files were served with `Cache-Control: public, max-age=0`, which forces the browser to revalidate with the server on every use regardless of `preloadWorldImages()` (CHG-20260711-020) - meaning the "works offline after load" claim from Stage 14 was not actually true once art needed revalidation. This affected the local dev server, the local production build, and the live Vercel deployment identically (confirmed via `curl` on all three).
+
+#### Changed
+
+- `apps/web/src/components/business/goal-panel.tsx` (new): a real Goal side panel - name/type, a progress bar (`startingAmount + plannedAllocationTotal` against `targetAmount`, capped and explicitly labelled "planned money only - not saved or transferred funds" to match the app's existing truth-in-copy rules), and a list of individual `PlannedAllocation` entries joined to their originating decision's name.
+- `apps/web/src/components/shell/app-shell.tsx`: `"goal"` now renders `GoalPanel` through the same `contextualDeck` slot as `DecisionsPanel`/`MyStuffPanel`, so the world stage stays visible next to it like every other tab (per the UI spec's "the world remains the dashboard" rule) instead of a full-screen takeover. The `activeNav !== "goal"` special case was deleted entirely.
+- `apps/web/src/components/shell/nav-items.ts`: removed the stale Stage-9 comment claiming only "town" renders real content.
+- `apps/web/src/app/globals.css`: added a zero-specificity `:where(button:not(:disabled))` rule restoring `cursor: pointer` and a `:active` press-scale globally, so no component was missed and no existing component's own `transition-*` utility gets overridden.
+- `apps/web/src/components/world/location-hotspot.tsx`: idle (non-selected, non-eligible, non-locked) hotspots now carry a subtle always-visible border/background/shadow instead of `border-transparent`, so the interactive region reads as a UI element at rest, not only on hover.
+- `apps/web/src/effects/scene-director.tsx`: replaced the instant mount/unmount + pulse with a `translate-y`/`opacity` cross-fade driven by local `entered` state (timers for enter at 10ms, leave at 700ms, actual removal at 1000ms, matching the previous total visible duration).
+- `apps/web/next.config.ts`: added a `headers()` rule giving `/art/:path*` `Cache-Control: public, max-age=31536000, immutable`, so once `preloadWorldImages()` has fetched a file the browser never revalidates it again - this is what actually makes the offline-after-load claim true, not just the preload call by itself.
+- `tests/e2e/town-dashboard.spec.ts`: added "Goal tab shows real progress beside the town, not a placeholder" (asserts the placeholder string has zero matches, real progress text renders, and the world stage/Home Nook stays visible alongside it).
+
+#### Verification
+
+```text
+corepack pnpm typecheck        -> PASS (4 packages)
+corepack pnpm lint             -> PASS
+corepack pnpm test              -> PASS (141/141)
+corepack pnpm format:check     -> PASS
+corepack pnpm --filter @lemonade/web build -> PASS
+corepack pnpm test:e2e         -> PASS (17/17 Chromium, up from 16)
+```
+
+- `curl -sD - http://127.0.0.1:3000/art/picnic-green.png` confirmed `Cache-Control: public, max-age=31536000, immutable` after the fix (was `max-age=0`).
+- Visually inspected the desktop screenshot baseline and a manual Goal-tab screenshot after the change; screenshot baselines regenerated and re-verified passing.
+- The offline e2e test (previously passing only by luck/timing) now passes deterministically for the right reason - confirmed by re-running it multiple times.
+
+#### Risks and follow-up
+
+- This was found through the user directly testing the deployed URL, not through this agent's own review passes across 14+ prior "completed and verified" stage claims - the Stage 14 three-pass self-review's UX/accessibility pass asked "are hotspots/buttons at least approximately 44px" (a size question) but never asked "does hovering/clicking actually look and feel interactive," and no stage's exit criteria included clicking through every nav tab. Both gaps should be treated as standing lessons for any remaining verification.
+- Redeployed to Vercel after this fix; see the deployment follow-up entry.
+
 ## Release/Submission Entries
 
 When a deployment or submission artifact is created, add entries for:
