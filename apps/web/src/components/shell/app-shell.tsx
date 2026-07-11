@@ -2,10 +2,11 @@
 
 import type { LocationId } from "@lemonade/domain";
 import { selectTownViewModel } from "@lemonade/game-engine";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { LOCATION_HOTSPOTS } from "../../assets/manifest";
 import { formatAud } from "../../lib/format";
+import { preloadWorldImages } from "../../lib/preload-assets";
 import { useMotionPreference } from "../../lib/use-motion-preference";
 import { useLemonade } from "../../repositories/repository-provider";
 import {
@@ -60,6 +61,10 @@ export function AppShell() {
   );
   const [assignmentError, setAssignmentError] = useState<string | null>(null);
   const [assignmentWorking, setAssignmentWorking] = useState(false);
+
+  useEffect(() => {
+    preloadWorldImages();
+  }, []);
 
   const townViewModel = useMemo(
     () => (appState ? selectTownViewModel(appState) : null),
@@ -235,7 +240,7 @@ export function AppShell() {
         <button
           type="button"
           onClick={() => void resetDemo()}
-          className="rounded-full bg-[var(--color-ink)] px-4 py-2 text-sm font-bold text-white"
+          className="min-h-11 rounded-full bg-[var(--color-ink)] px-4 text-sm font-bold text-white"
         >
           Reset Demo
         </button>
@@ -346,7 +351,7 @@ export function AppShell() {
           <button
             type="button"
             onClick={() => setInvalidImport(false)}
-            className="font-bold underline"
+            className="flex min-h-11 items-center font-bold underline"
           >
             Dismiss
           </button>

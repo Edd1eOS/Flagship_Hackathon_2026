@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 
-// Every world/product image is optional until Stage 13 art lands. This tile
-// renders the real image when a src exists and otherwise falls back to a
+// Renders real art when a manifest entry has a src; locations without
+// dedicated art (a location still locked, or Quiet Garden) fall back to a
 // tinted block so a missing asset never collapses or shifts the layout.
 export type AssetTileProps = {
   src: string | null;
@@ -39,7 +39,7 @@ export function AssetTile({
     );
   }
   if (src) {
-    // eslint-disable-next-line @next/next/no-img-element -- fallback-first tile predates real art (Stage 13); a plain <img> keeps the component decoupled from next/image config until real files exist.
+    // eslint-disable-next-line @next/next/no-img-element -- static files under public/art, rendered at whatever size the caller's className/style dictates; next/image's fill-container sizing isn't worth the config for a fixed local art set.
     return <img src={src} alt={alt} className={className} style={style} />;
   }
 

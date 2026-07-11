@@ -140,7 +140,7 @@ export function CaptureFlow({
       <button
         type="button"
         onClick={onClose}
-        className="mb-4 flex items-center gap-1.5 self-start text-sm font-semibold text-[var(--color-ink)]/70"
+        className="mb-4 flex min-h-11 items-center gap-1.5 self-start text-sm font-semibold text-[var(--color-ink)]/70"
       >
         <ArrowLeft size={16} aria-hidden="true" />
         Today

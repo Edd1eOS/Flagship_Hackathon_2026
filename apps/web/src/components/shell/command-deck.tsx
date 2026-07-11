@@ -69,7 +69,7 @@ export function CommandDeck({
         <button
           type="button"
           onClick={onClearSelection}
-          className="flex items-center gap-1.5 self-start text-sm font-semibold text-[var(--color-ink)]/70 hover:text-[var(--color-ink)]"
+          className="flex min-h-11 items-center gap-1.5 self-start text-sm font-semibold text-[var(--color-ink)]/70 hover:text-[var(--color-ink)]"
         >
           <ArrowLeft size={16} aria-hidden="true" />
           Today
@@ -127,7 +127,7 @@ export function CommandDeck({
             <button
               type="button"
               onClick={() => onReviewDecision(topReady.id)}
-              className="shrink-0 rounded-full bg-[var(--color-coral)] px-3 py-1.5 text-xs font-bold text-white"
+              className="flex min-h-11 shrink-0 items-center rounded-full bg-[var(--color-coral)] px-3 text-xs font-bold text-white"
             >
               Review now
             </button>
