@@ -11,6 +11,7 @@ import {
   createCommandDependencies,
   executeCommand,
   migrateAppState,
+  promoteReadyDecisions,
 } from "@lemonade/domain";
 
 export const APP_STATE_STORAGE_KEY = "lemonade.app-state.v1";
@@ -48,7 +49,9 @@ export class WebLocalRepository implements LemonadeRepository {
     const raw = this.#storage.getItem(APP_STATE_STORAGE_KEY);
     if (raw !== null) {
       try {
-        this.#state = migrateAppState(JSON.parse(raw));
+        const migrated = migrateAppState(JSON.parse(raw));
+        this.#state = promoteReadyDecisions(migrated, this.#deps.clock.now());
+        if (this.#state !== migrated) this.#persist(this.#state);
         return this.#state;
       } catch (error) {
         console.warn(

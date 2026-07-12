@@ -1334,6 +1334,46 @@ corepack pnpm test:e2e         -> PASS (19/19 Chromium; one run hit an environme
 
 - Still open: the user's report that the extension is fully non-functional for them locally (Chrome and Edge), independent of everything fixed today. Awaiting their screenshot/exact symptom.
 
+### CHG-20260712-029 - Fix missing cooling-to-ready promotion; local-only skip-wait; Scout-styled match popup
+
+- Timestamp: 2026-07-12 09:15 CST
+- Author/agent: Claude implementation agent
+- Stage: n/a (correctness fix + local testing affordance + UX follow-up)
+- Change type: fix + feature
+- Status: completed
+- Request/source: user asked twice, urgently, not to make "Pause" a real 24-hour wait, and separately asked for a lightweight Scout-styled hint when typing an item's job/category during Manual Capture.
+
+#### Root cause found while investigating "don't make Pause real 24 hours"
+
+Investigating why a freshly-captured decision felt stuck in Cooling forever (not just "24 hours is long to wait," but genuinely never resolving) surfaced a real, pre-existing gap: `decision-machine.ts` has always had a complete, tested, time-gated `MARK_READY` transition (`getDecisionReadiness`, `markReady`) that flips a cooling decision to ready once `reviewAt` has passed - but nothing in `transaction.ts`, any command handler, or the web app ever called it. `selectReadyDecisions` filters on the stored `status` field only, so a decision would stay `"cooling"` forever, even after the real 24 hours elapsed, unless something explicitly transitioned it - which never happened. The seed only ever looked correct because it hand-writes one decision directly with `status: "ready"`. Also: `SKIP`/`EXTEND` (the "already own it," "I repaired it," and "wait another 24 hours" outcomes) are only legal from `"ready"`, so a real user's own captured decision could never reach those outcomes at all, cooling or not.
+
+#### Changed
+
+- `packages/domain/src/transaction.ts`: added `promoteReadyDecisions(state, now)` - scans decisions, flips any `"cooling"` decision whose `reviewAt` has passed to `"ready"`. Called at the top of `executeCommand` (every dispatch resyncs first) so the real 24-hour rule now actually resolves on its own once time passes, exactly as documented, for the first time.
+- `apps/web/src/repositories/web-local-repository.ts`: also runs `promoteReadyDecisions` right after `load()`'s migration step (and persists if it changed anything), so a decision that became eligible while the tab was closed shows as Ready immediately on next open, not only after the user dispatches some other command first.
+- New `SKIP_COOLING_WAIT` command + `DECISION_COOLING_SKIPPED` event (schema-validated like every other command/event, so replay-dedup and the audit trail stay consistent) - explicitly documented in both places as a local-testing-only affordance, never dispatched from the real review flow. Handler requires `status === "cooling"`, sets `reviewAt` to now, and calls the existing `markReady` guard (not a hand-rolled status set) so it goes through the same legality check as the real time-gated path.
+- `apps/web/src/components/business/decisions-panel.tsx`: added a "Skip wait (local testing only)" button on each cooling item, gated by `process.env.NODE_ENV !== "production"` - confirmed absent from the production bundle (`grep` over `.next/static/chunks` after `next build` found zero matches for the string), so it never appears on the deployed Vercel site or in the judged build, only under `pnpm dev:web`.
+- `apps/web/src/components/business/capture-flow.tsx`: restyled the always-present, easy-to-miss inline "Same-job check" block into a Scout-styled popup card (bordered, shadowed, `scout.acknowledge` sprite, matching `SceneDirector`'s visual language) that only renders when a match is actually found, addressing "no hint pops up when typing the item type."
+
+#### Verification
+
+```text
+corepack pnpm typecheck        -> PASS (4 packages)
+corepack pnpm lint             -> PASS
+corepack pnpm test              -> PASS (141/141)
+corepack pnpm format:check     -> PASS
+corepack pnpm --filter @lemonade/web build -> PASS
+corepack pnpm test:e2e         -> PASS (20/20 Chromium, up from 19)
+```
+
+- New test: "Skip wait (local testing only) promotes a fresh capture straight to Ready" - captures a decision, confirms it starts in Cooling, clicks the new button, confirms `Ready (2)`/`Cooling (0)`, then confirms the previously-blocked "What I own solved it" outcome is now enabled - proves the full promotion path end to end, not just the button's existence.
+- `grep -rc "Skip wait" apps/web/.next/static/chunks/*.js` after a production build: zero matches everywhere, confirming the dev-only gate is real, not just visually hidden.
+
+#### Risks and follow-up
+
+- `promoteReadyDecisions` running on every `executeCommand` call is an O(decisions) scan; at seed/demo scale (single digits) this is free, but noted in case decision volume ever grows materially.
+- Still open: the extension non-functional report from the user, independent of this entry.
+
 ## Release/Submission Entries
 
 When a deployment or submission artifact is created, add entries for:

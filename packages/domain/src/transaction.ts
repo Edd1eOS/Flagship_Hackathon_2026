@@ -13,6 +13,7 @@ import type {
   PlanAllocationCommand,
   QuickAddOwnedItemCommand,
   ResolveDecisionCommand,
+  SkipCoolingWaitCommand,
   StartCoolingCommand,
 } from "./commands/command";
 import {
@@ -25,6 +26,8 @@ import {
 import type { Mission } from "./schemas/mission";
 import {
   computeReviewAt,
+  getDecisionReadiness,
+  markReady,
   transitionDecision,
   type DecisionTransitionEvent,
 } from "./decision-machine";
@@ -443,6 +446,48 @@ function handleExtendCooling(
   );
 }
 
+function handleSkipCoolingWait(
+  state: AppState,
+  command: SkipCoolingWaitCommand,
+  deps: CommandDependencies,
+): TransactionResult {
+  const decision = findDecision(state, command.decisionId);
+  if (!decision) {
+    return notFound(`Decision "${command.decisionId}" does not exist`);
+  }
+  if (decision.status !== "cooling") {
+    return ruleViolation(
+      `Only a cooling decision can skip its wait, not "${decision.status}"`,
+    );
+  }
+
+  const now = deps.clock.now();
+  const readyNow = markReady(
+    { ...decision, reviewAt: toIsoTimestamp(now) },
+    deps.clock,
+  );
+  if (!readyNow.ok) {
+    return ruleViolation(readyNow.reason);
+  }
+
+  const event: DomainEvent = {
+    id: deps.ids.nextId("evt"),
+    type: "DECISION_COOLING_SKIPPED",
+    occurredAt: toIsoTimestamp(now),
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    commandId: command.commandId,
+    decisionId: decision.id,
+  };
+  return ok(
+    {
+      ...state,
+      decisions: replaceDecision(state, readyNow.decision),
+      events: appendUniqueEvents(state.events, [event]),
+    },
+    [event],
+  );
+}
+
 // Reuse commitments require an honest context: either the user is reviewing
 // a ready decision or has already skipped the purchase.
 const COMMITTABLE_STATUSES: ReadonlySet<PurchaseDecision["status"]> = new Set([
@@ -827,6 +872,8 @@ function runCoreCommand(
       return handleResolveDecision(state, command, deps);
     case "EXTEND_COOLING":
       return handleExtendCooling(state, command, deps);
+    case "SKIP_COOLING_WAIT":
+      return handleSkipCoolingWait(state, command, deps);
     case "COMMIT_REUSE":
       return handleCommitReuse(state, command, deps);
     case "OFFER_MISSION":
@@ -859,19 +906,40 @@ function runCoreCommand(
   }
 }
 
+// Cooling decisions are time-gated by `reviewAt`, not by any dispatched
+// command, so nothing else ever flips a stale cooling decision to ready.
+// Applied at the top of every command and on load so "Ready" always
+// reflects real elapsed time, not just the seed's pre-made entry.
+export function promoteReadyDecisions(state: AppState, now: Date): AppState {
+  let changed = false;
+  const decisions = state.decisions.map((decision) => {
+    if (
+      decision.status === "cooling" &&
+      decision.reviewAt &&
+      getDecisionReadiness(decision.reviewAt, now) === "ready"
+    ) {
+      changed = true;
+      return { ...decision, status: "ready" as const };
+    }
+    return decision;
+  });
+  return changed ? { ...state, decisions } : state;
+}
+
 export function executeCommand(
   state: AppState,
   command: Command,
   deps: CommandDependencies,
 ): TransactionResult {
-  const alreadyProcessed = state.events.some(
+  const promotedState = promoteReadyDecisions(state, deps.clock.now());
+  const alreadyProcessed = promotedState.events.some(
     (event) => event.commandId === command.commandId,
   );
   if (alreadyProcessed) {
-    return ok(state, [], true);
+    return ok(promotedState, [], true);
   }
 
-  const result = runCoreCommand(state, command, deps);
+  const result = runCoreCommand(promotedState, command, deps);
   if (!result.ok || !deps.town || command.type === "RESET_DEMO") {
     return result;
   }
