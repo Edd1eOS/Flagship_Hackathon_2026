@@ -410,6 +410,7 @@ export function AppShell() {
         motionOverride={motionOverride}
         onMotionOverrideChange={setMotionOverride}
         onShowHelp={() => setOnboardingOpen(true)}
+        onResetDemo={() => void resetDemo()}
       />
       {onboardingOpen ? (
         <OnboardingModal

@@ -23,6 +23,7 @@ export type TopBarProps = {
   motionOverride: MotionOverride;
   onMotionOverrideChange: (value: MotionOverride) => void;
   onShowHelp: () => void;
+  onResetDemo: () => void;
 };
 
 export function TopBar({
@@ -36,6 +37,7 @@ export function TopBar({
   motionOverride,
   onMotionOverrideChange,
   onShowHelp,
+  onResetDemo,
 }: TopBarProps) {
   const xpIntoLevel = totalXp % xpPerLevel;
   const [soundEnabled, setSoundEnabled] = useState(false);
@@ -145,6 +147,16 @@ export function TopBar({
                   Always reduce motion
                 </label>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSettingsOpen(false);
+                  onResetDemo();
+                }}
+                className="mt-3 min-h-11 w-full rounded-full border border-[var(--color-line)] text-sm font-bold text-[var(--color-coral)]"
+              >
+                Reset Demo
+              </button>
             </div>
           ) : null}
         </div>
