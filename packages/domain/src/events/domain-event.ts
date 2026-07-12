@@ -98,6 +98,14 @@ export const domainEventSchema = z.discriminatedUnion("type", [
     type: z.literal("REWARD_SELECTED"),
     rewardId: entityIdSchema,
   }),
+  z.strictObject({
+    ...eventBase,
+    // Local testing/demo affordance only, never dispatched from a real
+    // purchase-review path: skips the remaining wait on one cooling
+    // decision so it can be reviewed immediately.
+    type: z.literal("DECISION_COOLING_SKIPPED"),
+    decisionId: entityIdSchema,
+  }),
 ]);
 export type DomainEvent = z.infer<typeof domainEventSchema>;
 export type DomainEventType = DomainEvent["type"];

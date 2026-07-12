@@ -45,6 +45,12 @@ export type ExtendCoolingCommand = CommandBase<"EXTEND_COOLING"> & {
   decisionId: string;
 };
 
+// Local testing/demo affordance only: skips the remaining real-time wait on
+// one cooling decision. Never dispatched from the actual review UI.
+export type SkipCoolingWaitCommand = CommandBase<"SKIP_COOLING_WAIT"> & {
+  decisionId: string;
+};
+
 export type QuickAddOwnedItemCommand = CommandBase<"QUICK_ADD_OWNED_ITEM"> & {
   name: string;
   category: string;
@@ -124,6 +130,7 @@ export type Command =
   | StartCoolingCommand
   | ResolveDecisionCommand
   | ExtendCoolingCommand
+  | SkipCoolingWaitCommand
   | QuickAddOwnedItemCommand
   | CommitReuseCommand
   | OfferMissionCommand

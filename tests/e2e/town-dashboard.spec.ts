@@ -187,10 +187,11 @@ test("manual capture creates persistent Cooling beside seeded Ready", async ({
         - text: replacement
         - radio "want" [checked]
         - text: want
-      - paragraph: Same-job check
-      - paragraph: Trail running shoes
-      - paragraph: "Already covers the same job: daily walking"
-      - paragraph: +2 more possible matches
+      - status:
+        - paragraph: Same-job match found
+        - paragraph: Trail running shoes
+        - paragraph: "Already covers the same job: daily walking"
+        - paragraph: +2 more possible matches
       - button "Pause for 24 hours"
   `);
   await capture.getByRole("button", { name: "Photo" }).click();
@@ -222,6 +223,42 @@ test("manual capture creates persistent Cooling beside seeded Ready", async ({
     page.getByRole("button", { name: /Cooling \(1\)/ }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: /Ready \(1\)/ })).toBeVisible();
+});
+
+test("Skip wait (local testing only) promotes a fresh capture straight to Ready", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "I'm tempted" }).click();
+  await page.getByRole("button", { name: "Pause for 24 hours" }).click();
+  await page.getByRole("button", { name: "Back to town" }).click();
+  await expect(
+    page.getByRole("button", { name: /Cooling \(1\)/ }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Decisions" }).first().click();
+  const decisions = page.getByRole("complementary", { name: "Decisions" });
+  await decisions
+    .getByRole("button", { name: "Skip wait (local testing only)" })
+    .click();
+
+  // The freshly-captured decision (originally only two seeded owned items
+  // away from a match) is now Ready without waiting a real 24 hours, and
+  // the seeded decision that was already Ready is unaffected.
+  await expect(page.getByRole("button", { name: /Ready \(2\)/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Cooling \(0\)/ }),
+  ).toBeVisible();
+
+  await decisions
+    .getByRole("button", { name: /Everyday walking sneakers/ })
+    .click();
+  const review = page.getByRole("complementary", { name: "Ready review" });
+  await expect(
+    review.getByRole("button", { name: "What I own solved it" }),
+  ).toBeEnabled();
 });
 
 test("business loop keeps working with the network fully offline after load", async ({

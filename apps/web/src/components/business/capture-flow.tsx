@@ -4,7 +4,9 @@ import { findSameJobMatches, type OwnedItem } from "@lemonade/domain";
 import { ArrowLeft, Camera, MousePointer2, PenLine } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 
+import { CHARACTER_MANIFEST } from "../../assets/manifest";
 import type { LemonadeStoreState } from "../../store/lemonade-store";
+import { AssetTile } from "../world/asset-tile";
 
 type Classification = "need" | "replacement" | "want";
 
@@ -255,13 +257,23 @@ export function CaptureFlow({
           </div>
         </fieldset>
 
-        <section className="border-y border-[var(--color-line)] py-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-leaf)]">
-            Same-job check
-          </p>
-          {bestMatch ? (
-            <>
-              <p className="mt-2 text-sm font-bold">{bestMatch.item.name}</p>
+        {bestMatch ? (
+          <div
+            role="status"
+            className="flex items-start gap-3 rounded-lg border-2 border-[var(--color-ink)] bg-[var(--color-paper)] p-3 shadow-lg transition-all"
+          >
+            <AssetTile
+              src={CHARACTER_MANIFEST["scout.acknowledge"].src}
+              sprite={CHARACTER_MANIFEST["scout.acknowledge"].sprite}
+              alt=""
+              tint="transparent"
+              className="h-10 w-10 shrink-0"
+            />
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-leaf)]">
+                Same-job match found
+              </p>
+              <p className="mt-1 text-sm font-bold">{bestMatch.item.name}</p>
               <p className="mt-1 text-sm text-[var(--color-ink)]/70">
                 {bestMatch.reasons[0]}
               </p>
@@ -271,13 +283,13 @@ export function CaptureFlow({
                   {matches.length > 2 ? "es" : ""}
                 </p>
               ) : null}
-            </>
-          ) : (
-            <p className="mt-2 text-sm text-[var(--color-ink)]/60">
-              No same-job item found. You can still continue.
-            </p>
-          )}
-        </section>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--color-ink)]/50">
+            No same-job item found yet. You can still continue.
+          </p>
+        )}
 
         {error ? (
           <p

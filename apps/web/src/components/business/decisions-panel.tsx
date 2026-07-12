@@ -74,6 +74,21 @@ export function DecisionsPanel({
                   ? new Date(decision.reviewAt).toLocaleString()
                   : "the cooling window"}
               </p>
+              {process.env.NODE_ENV !== "production" ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    void dispatch({
+                      type: "SKIP_COOLING_WAIT",
+                      commandId: crypto.randomUUID(),
+                      decisionId: decision.id,
+                    })
+                  }
+                  className="mt-1 min-h-11 rounded-full border border-dashed border-[var(--color-ink)]/40 px-3 text-xs font-bold text-[var(--color-ink)]/70"
+                >
+                  Skip wait (local testing only)
+                </button>
+              ) : null}
             </div>
           ))
         ) : (
