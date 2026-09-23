@@ -1,8 +1,18 @@
+import Image from "next/image";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Controlled Demo Store | Lemonade Mindful Spending",
+  description:
+    "A fictional product page used to demonstrate Lemonade's optional browser-extension handoff. No checkout or payment is available.",
+  alternates: { canonical: "/demo-store" },
+};
+
 const productJsonLd = {
   "@context": "https://schema.org",
   "@type": "Product",
   name: "Cloudstep Runner Sneakers",
-  image: "/demo/cloudstep-runner.png",
+  image: "https://web-seven-pied-41.vercel.app/demo/cloudstep-runner.png",
   category: "footwear",
   description: "Everyday sneakers for daily walking and light travel.",
   additionalProperty: {
@@ -26,15 +36,15 @@ export default function DemoStorePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
       <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-2">
-        <div
-          aria-label="Cloudstep Runner Sneakers product image"
-          className="flex min-h-[420px] items-center justify-center rounded-lg border-2 border-[#2f291f] bg-[#f6efdd] text-center"
-        >
-          <span className="font-[family-name:var(--font-display)] text-3xl">
-            Cloudstep Runner
-            <br />
-            Sneakers
-          </span>
+        <div className="flex min-h-[420px] items-center justify-center overflow-hidden rounded-lg border-2 border-[#2f291f] bg-[#f6efdd] p-6">
+          <Image
+            src="/demo/cloudstep-runner.png"
+            alt="Fictional cream, sage, and coral Cloudstep Runner sneakers"
+            width={900}
+            height={900}
+            preload
+            className="h-auto w-full max-w-[520px] object-contain"
+          />
         </div>
         <section data-product-root className="flex flex-col justify-center">
           <p className="text-sm font-bold uppercase tracking-widest text-[#4f8a50]">

@@ -35,6 +35,10 @@ generated-images/
 *.log
 pnpm-debug.log*
 
+# Local screen recordings can contain voice or personal information and are
+# far larger than GitHub's normal single-file limit.
+Recording *.mp4
+
 # Editors and operating systems
 .DS_Store
 Thumbs.db

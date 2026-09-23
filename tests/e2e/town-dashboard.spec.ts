@@ -95,7 +95,7 @@ test("desktop town dashboard is stable and keyboard reachable", async ({
             - button "Host Unassigned"
       - region "Patrol":
         - heading "Patrol" [level=3]
-        - paragraph: Extension not connected
+        - paragraph: Optional Scout extension · local demo
       - button "I'm tempted"
   `);
 
@@ -151,6 +151,26 @@ test("mobile town dashboard keeps world, sheet, and navigation in view", async (
   });
 });
 
+test("compact mobile header does not overlap at 320 pixels", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await expectStableDashboard(page);
+
+  const brandBox = await page
+    .getByText("Lemonade", { exact: true })
+    .boundingBox();
+  const helpBox = await page
+    .getByRole("button", { name: "How this works" })
+    .boundingBox();
+
+  expect(brandBox).not.toBeNull();
+  expect(helpBox).not.toBeNull();
+  expect((brandBox?.x ?? 0) + (brandBox?.width ?? 0)).toBeLessThanOrEqual(
+    helpBox?.x ?? 0,
+  );
+});
+
 test("manual capture creates persistent Cooling beside seeded Ready", async ({
   page,
 }) => {
@@ -170,7 +190,6 @@ test("manual capture creates persistent Cooling beside seeded Ready", async ({
       - heading "What are you tempted by?" [level=2]
       - button "Manual" [pressed]
       - button "Photo"
-      - button "Scout" [disabled]
       - text: Item name
       - textbox "Item name": Everyday walking sneakers
       - text: Price (AUD)

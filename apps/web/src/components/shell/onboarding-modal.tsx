@@ -11,6 +11,9 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
         aria-label="Welcome to Lemonade Lane"
         className="flex max-h-[90vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-2xl border border-[var(--color-line)] bg-[var(--color-paper)] p-6 shadow-lg"
       >
+        <p className="self-start rounded-full bg-[var(--color-cream)] px-3 py-1 text-xs font-bold text-[var(--color-ink)]/70">
+          Hackathon prototype · fictional demo data · saved only in this browser
+        </p>
         <h2 className="font-[family-name:var(--font-display)] text-3xl">
           Welcome to Lemonade Lane
         </h2>

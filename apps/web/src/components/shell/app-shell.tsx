@@ -38,7 +38,7 @@ import type { NavId } from "./nav-items";
 import { TopBar } from "./top-bar";
 import { SceneDirector } from "../../effects/scene-director";
 
-const PATROL_LABEL = "Extension not connected";
+const PATROL_LABEL = "Optional Scout extension · local demo";
 const ASSIGNABLE_PROJECT_LOCATIONS: readonly LocationId[] = [
   "workshop",
   "picnic_green",
@@ -54,7 +54,7 @@ const LOCKED_UNLOCK_HINTS: Partial<Record<LocationId, string>> = {
   picnic_green: 'Complete an honest "Ready" decision review to unlock this.',
   little_station:
     "Plan part of a skipped purchase toward your goal to unlock this.",
-  quiet_garden: "Not part of this build yet.",
+  quiet_garden: "Planned beyond this prototype.",
 };
 
 export function AppShell() {
@@ -376,6 +376,7 @@ export function AppShell() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[var(--color-paper)]">
+      <h1 className="sr-only">Lemonade Mindful Spending</h1>
       {invalidImport ? (
         <div
           role="alert"

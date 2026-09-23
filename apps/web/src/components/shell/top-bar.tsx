@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  HelpCircle,
-  Radar,
-  Settings,
-  Sparkles,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
+import { HelpCircle, Radar, Settings, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import type { MotionOverride } from "../../lib/use-motion-preference";
@@ -40,13 +33,12 @@ export function TopBar({
   onResetDemo,
 }: TopBarProps) {
   const xpIntoLevel = totalXp % xpPerLevel;
-  const [soundEnabled, setSoundEnabled] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <header className="relative flex h-14 items-center justify-between gap-4 border-b border-[var(--color-line)] bg-[var(--color-paper)] px-4 lg:h-16 lg:px-6">
       <div className="flex min-w-0 items-baseline gap-2">
-        <span className="font-[family-name:var(--font-display)] text-xl text-[var(--color-ink)] lg:text-2xl">
+        <span className="font-[family-name:var(--font-display)] text-lg text-[var(--color-ink)] sm:text-xl lg:text-2xl">
           Lemonade
         </span>
         <span className="hidden text-xs font-medium text-[var(--color-ink)]/60 xl:inline">
@@ -69,6 +61,7 @@ export function TopBar({
         <button
           type="button"
           aria-label="How this works"
+          title="How this works"
           onClick={onShowHelp}
           className="flex h-11 w-11 items-center justify-center rounded-full text-[var(--color-ink)] hover:bg-[var(--color-cream)]"
         >
@@ -87,25 +80,11 @@ export function TopBar({
         <span
           title={`Patrol: ${patrolLabel}`}
           aria-label={`Patrol: ${patrolLabel}`}
-          className="flex items-center gap-1.5 rounded-full border border-[var(--color-line)] px-2 py-1 text-xs font-semibold text-[var(--color-ink)]/70 sm:px-3"
+          className="hidden items-center gap-1.5 rounded-full border border-[var(--color-line)] px-3 py-1 text-xs font-semibold text-[var(--color-ink)]/70 sm:flex"
         >
           <Radar size={14} aria-hidden="true" />
           <span className="hidden sm:inline">{patrolLabel}</span>
         </span>
-
-        <button
-          type="button"
-          aria-pressed={soundEnabled}
-          aria-label={soundEnabled ? "Mute sound" : "Enable sound"}
-          onClick={() => setSoundEnabled((value) => !value)}
-          className="flex h-11 w-11 items-center justify-center rounded-full text-[var(--color-ink)] hover:bg-[var(--color-cream)]"
-        >
-          {soundEnabled ? (
-            <Volume2 size={18} aria-hidden="true" />
-          ) : (
-            <VolumeX size={18} aria-hidden="true" />
-          )}
-        </button>
 
         <div className="relative">
           <button

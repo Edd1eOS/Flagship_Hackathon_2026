@@ -1,7 +1,7 @@
 "use client";
 
 import { findSameJobMatches, type OwnedItem } from "@lemonade/domain";
-import { ArrowLeft, Camera, MousePointer2, PenLine } from "lucide-react";
+import { ArrowLeft, Camera, PenLine } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 
 import { CHARACTER_MANIFEST } from "../../assets/manifest";
@@ -151,7 +151,7 @@ export function CaptureFlow({
         What are you tempted by?
       </h2>
 
-      <div className="mt-4 grid grid-cols-3 gap-2" aria-label="Capture method">
+      <div className="mt-4 grid grid-cols-2 gap-2" aria-label="Capture method">
         <button
           type="button"
           aria-pressed={mode === "manual"}
@@ -167,14 +167,6 @@ export function CaptureFlow({
           className={`flex min-h-11 items-center justify-center gap-1 rounded-lg border-2 text-xs ${mode === "photo" ? "border-[var(--color-lemon)] font-bold" : "border-[var(--color-line)]"}`}
         >
           <Camera size={14} aria-hidden="true" /> Photo
-        </button>
-        <button
-          type="button"
-          disabled
-          title="Extension prefill arrives in Stage 12"
-          className="flex min-h-11 items-center justify-center gap-1 rounded-lg border border-[var(--color-line)] text-xs opacity-50"
-        >
-          <MousePointer2 size={14} aria-hidden="true" /> Scout
         </button>
       </div>
 

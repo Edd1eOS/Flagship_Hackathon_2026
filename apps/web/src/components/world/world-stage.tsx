@@ -1,4 +1,5 @@
 import type { LocationId, LocationState, TownLocation } from "@lemonade/domain";
+import Image from "next/image";
 
 import {
   ASSET_MANIFEST,
@@ -57,12 +58,23 @@ export function WorldStage({
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <AssetTile
-        src={base.src}
-        alt={base.alt}
-        tint={base.fallbackTint}
-        className="absolute inset-0 h-full w-full"
-      />
+      {base.src ? (
+        <Image
+          src={base.src}
+          alt={base.alt}
+          fill
+          preload
+          sizes="(max-width: 1024px) 100vw, 70vw"
+          className="object-fill"
+        />
+      ) : (
+        <AssetTile
+          src={null}
+          alt={base.alt}
+          tint={base.fallbackTint}
+          className="absolute inset-0 h-full w-full"
+        />
+      )}
       {locations.map((location) => {
         const assetId = worldAssetForLocation(location.id, location.state);
         const asset = assetId ? ASSET_MANIFEST[assetId] : null;

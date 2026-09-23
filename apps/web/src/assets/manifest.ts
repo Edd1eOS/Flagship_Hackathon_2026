@@ -203,6 +203,6 @@ export const LOCATION_HOTSPOTS: Record<
   browser_gate: {
     rect: { left: 66, top: 70, width: 26, height: 24 },
     label: "Browser Gate",
-    blurb: "Where the Scout returns from patrol",
+    blurb: "Optional browser-extension handoff point",
   },
 };

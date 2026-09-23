@@ -1374,6 +1374,64 @@ corepack pnpm test:e2e         -> PASS (20/20 Chromium, up from 19)
 - `promoteReadyDecisions` running on every `executeCommand` call is an O(decisions) scan; at seed/demo scale (single digits) this is free, but noted in case decision volume ever grows materially.
 - Still open: the extension non-functional report from the user, independent of this entry.
 
+### CHG-20260923-030 - Portfolio-ready public demo polish
+
+- Timestamp: 2026-09-23 16:20 CST
+- Author/agent: Codex implementation agent
+- Stage: public portfolio packaging
+- Change type: security + UX + documentation
+- Status: completed
+- Request/source: user asked to finish, package, and publish the Lemonade
+  hackathon prototype as an Upwork portfolio item.
+
+#### Changed
+
+- Upgraded `next` and `eslint-config-next` from 16.2.10 to 16.3.5, which
+  removed all findings from `pnpm audit --prod`.
+- Replaced the demo store's missing product-image reference with a fictional
+  generated sneaker asset and visible product art; the page remains explicitly
+  labelled as a controlled demo with no checkout, payment, account, or delivery.
+- Added canonical, Open Graph, Twitter, robots, and sitemap metadata; added an
+  accessible page heading and responsive `next/image` delivery for the large
+  town background.
+- Removed the no-op sound button and stale disabled Scout capture button;
+  clarified the optional local-extension boundary and future Quiet Garden
+  scope; added a visible prototype/data/persistence disclaimer to onboarding.
+- Fixed the compact 320 px header by hiding the Patrol pill below `sm`, and
+  added a regression test for header overlap.
+- Replaced the README role placeholder with the portfolio role and prototype
+  boundaries, and marked older planning/handoff documents as a development
+  archive rather than current implementation truth.
+- Added an explicit ignore rule for local screen recordings so the existing
+  187.5 MB personal recording cannot be added accidentally.
+
+#### Verification
+
+```text
+corepack pnpm audit --prod    -> PASS (no known vulnerabilities)
+corepack pnpm typecheck       -> PASS (4 packages)
+corepack pnpm lint            -> PASS
+corepack pnpm test            -> PASS (141/141)
+corepack pnpm format:check    -> PASS
+corepack pnpm --filter @lemonade/web build -> PASS (7 static routes)
+corepack pnpm --filter @lemonade/extension build -> PASS
+corepack pnpm exec playwright test --update-snapshots -> PASS (21/21 Chromium)
+```
+
+- Desktop and mobile baselines were regenerated only after visually reviewing
+  the expected header and responsive-image changes.
+- Three 1200×900 public portfolio screenshots were captured from the working
+  app: active town flow, same-job Ready review, and controlled demo store.
+
+#### Boundaries retained
+
+- No backend, accounts, cloud sync, bank connection, payments, checkout, or
+  real-retailer integration was added or claimed.
+- The extension remains an optional locally loaded demo limited to controlled
+  origins; host permissions were not expanded.
+- No default seed history, XP, mission, or allocation was fabricated. The
+  portfolio town screenshot was produced by completing the real tested flow.
+
 ## Release/Submission Entries
 
 When a deployment or submission artifact is created, add entries for:

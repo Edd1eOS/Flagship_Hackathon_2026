@@ -90,14 +90,31 @@ The persona ("Alex"), goal ("Japan trip fund"), owned items, and the one seeded 
 - Pause / Continue anyway / Snooze / Hide are always available and always tab-local until an explicit handoff.
 - A paused decision is handed off to the web app at most once (idempotent, command-ID deduped) and is acknowledged so it cannot be replayed.
 
-## Source references
+## Development archive
 
-- [`docs/production/README.md`](./docs/production/README.md) — index of all production documentation (source of truth for implementation).
-- [`docs/production/01-implementation-roadmap.md`](./docs/production/01-implementation-roadmap.md) — staged delivery plan and exit criteria.
-- [`docs/production/02-change-log.md`](./docs/production/02-change-log.md) — full change history with verification evidence for every stage.
-- [`docs/production/06-agent-handoff.md`](./docs/production/06-agent-handoff.md) — current implementation state.
-- [`docs/13-town-dashboard-uiux.md`](./docs/13-town-dashboard-uiux.md) — UI/UX specification the dashboard was built against.
+The `docs/` directory records the hackathon build process and includes plans
+and handoff notes that may describe earlier stages. The running application,
+automated tests, and current README define the implemented scope. The detailed
+change history remains in
+[`docs/production/02-change-log.md`](./docs/production/02-change-log.md), and
+[`docs/13-town-dashboard-uiux.md`](./docs/13-town-dashboard-uiux.md) preserves
+the dashboard design brief.
 
 ## Team & roles
 
-_To be completed by the team before submission._
+Lemonade is a team hackathon prototype built as a working vertical slice, not
+a feature-complete consumer product. This portfolio case study focuses on my
+web-prototype and deployment work: the Next.js/React/TypeScript experience,
+deterministic purchase-decision flow, automated verification, and Vercel
+deployment represented in this repository.
+
+## Prototype boundaries
+
+- Static/prerendered web deployment with browser-local persistence.
+- Fictional seeded data and a controlled fictional storefront.
+- No backend, accounts, cloud sync, payments, bank connection, checkout, or
+  real-retailer integration.
+- The optional browser extension is loaded locally for the controlled demo; it
+  is not published as a general-purpose store extension.
+- Product artwork on the controlled storefront is a fictional generated demo
+  asset and does not depict or endorse a real brand.
